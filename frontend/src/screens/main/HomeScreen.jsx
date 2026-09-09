@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import TabRootHeader from '../../components/TabRootHeader';
+import IllustratedEmptyState from '../../components/IllustratedEmptyState';
 import { getProducts } from '../../services/products';
 import { useAppStore } from '../../store/useAppStore';
 import { useTranslation } from '../../i18n';
@@ -263,7 +264,7 @@ export default function HomeScreen({ navigation }) {
 
     return (
       <View style={styles.productCard}>
-        <Image source={{ uri: item.imageUrl }} style={styles.productImage} />
+        <Image source={{ uri: item.imageUrl || item.image }} style={styles.productImage} />
 
         <View style={styles.productDetails}>
           {/* Top badges */}
@@ -326,20 +327,15 @@ export default function HomeScreen({ navigation }) {
 
   // Render Empty State
   const renderEmptyState = () => (
-    <View style={styles.emptyContainer}>
-      <View style={styles.emptyIconCircle}>
-        <Ionicons name="cube-outline" size={44} color={colors.text.muted} />
-      </View>
-      <Text style={styles.emptyTitlePrimary}>{t('noProductsFound')}</Text>
-      <Text style={styles.emptyDesc}>{t('noProductsFoundDesc')}</Text>
-      <TouchableOpacity
-        style={styles.emptyAddBtn}
-        onPress={handleAddProductPress}
-      >
-        <Ionicons name="add" size={18} color={colors.surface.white} />
-        <Text style={styles.emptyAddText}>{t('addProduct')}</Text>
-      </TouchableOpacity>
-    </View>
+    <IllustratedEmptyState
+      type="products"
+      titleHindi="अपनी पहली हस्तशिल्प कला जोड़ें"
+      titleEnglish="Add your first craft product to get started"
+      descHindi="शिल्पकला पर अपनी कला प्रदर्शित करें और देश-विदेश के खरीदारों से सीधे जुड़ें।"
+      descEnglish="Showcase your craft on ShilpKala and connect directly with verified buyers worldwide."
+      buttonTitle={t('addProduct')}
+      onButtonPress={handleAddProductPress}
+    />
   );
 
   return (

@@ -11,12 +11,14 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { requestRecordingPermissionsAsync } from 'expo-audio';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import PrimaryButton from '../../components/PrimaryButton';
 import StepFlowHeader from '../../components/StepFlowHeader';
 import VoiceInputButton from '../../components/VoiceInputButton';
+import PermissionFallback from '../../components/PermissionFallback';
 import { streamVoiceTranscription } from '../../services/ai';
 import { useTranslation } from '../../i18n';
 
@@ -28,11 +30,23 @@ export default function VoiceDescribe({ route, navigation }) {
   const [transcribedText, setTranscribedText] = useState('');
   const [isTypingMode, setIsTypingMode] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [micDenied, setMicDenied] = useState(false);
   const stopStreamRef = useRef(null);
   const { t, currentLanguage } = useTranslation();
 
-  const handleStartVoice = () => {
+  const handleStartVoice = async () => {
     if (isStreaming) return;
+
+    try {
+      const { status, granted } = await requestRecordingPermissionsAsync();
+      if (status !== 'granted' && !granted) {
+        setMicDenied(true);
+        return;
+      }
+    } catch (e) {
+      // ignore on platforms without Audio permissions
+    }
+
     setIsStreaming(true);
     setTranscribedText('');
 
@@ -65,6 +79,21 @@ export default function VoiceDescribe({ route, navigation }) {
       : `${t('continueToReview')} / Review Listing`;
 
   const hasContent = transcribedText.trim().length > 0;
+
+  if (micDenied) {
+    return (
+      <PermissionFallback
+        type="microphone"
+        onRequestPermission={async () => {
+          try {
+            const { status, granted } = await requestRecordingPermissionsAsync();
+            if (status === 'granted' || granted) setMicDenied(false);
+          } catch (e) {}
+        }}
+        onGoBack={() => setMicDenied(false)}
+      />
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>

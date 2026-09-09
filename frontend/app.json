@@ -20,21 +20,24 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "output": "static",
+      "output": "single",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-  [
-    "expo-splash-screen",
-    {
-      "backgroundColor": "#208AEF",
-      "image": "./assets/images/splash-icon.png",
-      "imageWidth": 76
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#208AEF",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 76
+        }
+      ],
+      "expo-audio",
+      "expo-video",
+      "expo-asset"
+    ],
+    "experiments": {
+      "reactCompiler": true
     }
-  ]
-],
-"experiments": {
-  "reactCompiler": true
-}
   }
 }

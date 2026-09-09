@@ -14,6 +14,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
+import PermissionFallback from '../../components/PermissionFallback';
 import { useTranslation } from '../../i18n';
 
 const { width } = Dimensions.get('window');
@@ -39,65 +40,11 @@ export default function CameraCapture({ navigation }) {
 
   if (!permission.granted) {
     return (
-      <SafeAreaView style={styles.permissionContainer}>
-        <View style={styles.topBackRow}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.closeBtn}
-          >
-            <Ionicons name="close" size={24} color={colors.navy.deep} />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.permCenter}>
-          <View style={styles.permIconWrap}>
-            <Ionicons name="camera-outline" size={48} color={colors.primary.rust} />
-          </View>
-
-          <Text style={styles.permTitle}>{t('cameraPermRequired')}</Text>
-          <Text style={styles.permDesc}>{t('cameraPermDesc')}</Text>
-
-          <TouchableOpacity
-            style={styles.grantBtn}
-            onPress={requestPermission}
-          >
-            <Text style={styles.grantBtnText}>{t('grantPermission')}</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.settingsBtn}
-            onPress={() => Linking.openSettings()}
-          >
-            <Ionicons name="settings-outline" size={16} color={colors.navy.deep} />
-            <Text style={styles.settingsBtnText}>{t('openSettings')}</Text>
-          </TouchableOpacity>
-
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>या / OR</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          <TouchableOpacity
-            style={styles.galleryFallbackBtn}
-            onPress={async () => {
-              const res = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                allowsEditing: true,
-                quality: 0.8,
-              });
-              if (!res.canceled && res.assets && res.assets[0]?.uri) {
-                navigation.navigate('AIEnhance', { imageUri: res.assets[0].uri });
-              }
-            }}
-          >
-            <Ionicons name="images-outline" size={18} color={colors.primary.rust} />
-            <Text style={styles.galleryFallbackText}>
-              {currentLanguage === 'en' ? 'Choose from Gallery' : `${t('gallery')} से चुनें / From Gallery`}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
+      <PermissionFallback
+        type="camera"
+        onRequestPermission={requestPermission}
+        onGoBack={() => navigation.goBack()}
+      />
     );
   }
 

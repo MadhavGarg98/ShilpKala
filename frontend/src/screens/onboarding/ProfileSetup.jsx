@@ -173,9 +173,9 @@ export default function ProfileSetup({ navigation }) {
                       )}
                     </View>
 
-                    {craft.imageUrl && (
+                    {(craft.imageUrl || craft.image) && (
                       <Image
-                        source={{ uri: craft.imageUrl }}
+                        source={{ uri: craft.imageUrl || craft.image }}
                         style={styles.craftImageThumb}
                         resizeMode="cover"
                       />

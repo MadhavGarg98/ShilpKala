@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
+import { useNavigation } from '@react-navigation/native';
 import { useAppStore } from '../store/useAppStore';
 import { useTranslation } from '../i18n';
 
@@ -14,8 +15,17 @@ export default function TabRootHeader({
   onProfilePress,
   style,
 }) {
+  const navigation = useNavigation();
   const artisanProfile = useAppStore((state) => state.artisanProfile);
   const { t, currentLanguage } = useTranslation();
+
+  const handleProfilePress = () => {
+    if (onProfilePress) {
+      onProfilePress();
+    } else {
+      navigation.navigate('Settings');
+    }
+  };
 
   const primaryTitle = title || t(txKey);
   const secondaryTitle = currentLanguage === 'en' ? '' : 'ShilpKala';
@@ -41,7 +51,7 @@ export default function TabRootHeader({
         {rightElement || (
           <TouchableOpacity
             activeOpacity={0.8}
-            onPress={onProfilePress}
+            onPress={handleProfilePress}
             style={styles.profileBadge}
           >
             {artisanProfile?.profileImageUrl ? (

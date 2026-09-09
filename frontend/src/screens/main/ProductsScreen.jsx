@@ -67,7 +67,7 @@ export default function ProductsScreen({ navigation }) {
         {/* Image */}
         <View style={styles.imageContainer}>
           <Image
-            source={{ uri: item.imageUrl }}
+            source={{ uri: item.imageUrl || item.image }}
             style={styles.productImage}
           />
           {/* Status Badge */}

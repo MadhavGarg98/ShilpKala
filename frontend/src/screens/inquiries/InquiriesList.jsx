@@ -14,6 +14,7 @@ import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import TabRootHeader from '../../components/TabRootHeader';
 import AudioPlayerInline from '../../components/AudioPlayerInline';
+import IllustratedEmptyState from '../../components/IllustratedEmptyState';
 import PrimaryButton from '../../components/PrimaryButton';
 import { useAppStore } from '../../store/useAppStore';
 import { useTranslation } from '../../i18n';
@@ -193,11 +194,13 @@ export default function InquiriesList({ navigation }) {
   };
 
   const renderEmptyState = () => (
-    <View style={styles.emptyContainer}>
-      <Ionicons name="chatbubbles-outline" size={56} color="#D0CAC2" />
-      <Text style={styles.emptyTitle}>{t('noInquiriesTitle')}</Text>
-      <Text style={styles.emptyDesc}>{t('noInquiriesDesc')}</Text>
-    </View>
+    <IllustratedEmptyState
+      type="inquiries"
+      titleHindi="अभी कोई खरीदार संदेश नहीं है"
+      titleEnglish="No buyer inquiries yet"
+      descHindi="जब खरीदार आपकी हस्तशिल्प कला देखेंगे, उनके संदेश और पूछताछ यहाँ दिखाई देंगे।"
+      descEnglish="When buyers across the world discover your craft listings, their inquiries will appear right here."
+    />
   );
 
   return (
