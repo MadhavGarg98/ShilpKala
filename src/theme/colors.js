@@ -24,3 +24,5 @@ export const colors = {
     muted: '#808080',
   }
 };
+
+export default colors;

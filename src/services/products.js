@@ -4,25 +4,26 @@ const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
 // TODO: BACKEND — replace with: GET /api/products
 export async function getProducts() {
-  await delay(500);
+  await delay(400);
   return useAppStore.getState().products;
 }
 
 // TODO: BACKEND — replace with: POST /api/products { images, voiceTranscript, artisanId }
 export async function createListing(data) {
-  await delay(1200);
+  await delay(1000);
   
   const newProduct = {
     id: `p${Date.now()}`,
-    titleHindi: data.titleHindi || 'नया उत्पाद',
-    titleEnglish: data.titleEnglish || 'New Product',
+    titleHindi: data.titleHindi || 'नया हस्तशिल्प उत्पाद',
+    titleEnglish: data.titleEnglish || 'New Handcrafted Product',
     price: data.price || 0,
-    status: 'live',
+    status: data.status || 'live',
     isGiCertified: data.isGiCertified || false,
     descriptionHindi: data.descriptionHindi || '',
     descriptionEnglish: data.descriptionEnglish || '',
-    imageUrl: data.imageUrl || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&q=80',
+    imageUrl: data.imageUrl || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&q=80',
     inquiryCount: 0,
+    viewsCount: 0,
     keywords: data.keywords || [],
   };
 
@@ -32,7 +33,7 @@ export async function createListing(data) {
 
 // TODO: BACKEND — replace with: PUT /api/products/{id}
 export async function updateListing(id, updates) {
-  await delay(800);
+  await delay(600);
   useAppStore.getState().updateProduct(id, updates);
   return true;
 }
