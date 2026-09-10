@@ -42,17 +42,16 @@ export default function InquiriesList({ navigation }) {
   const unreadAudioText = useMemo(() => {
     const unreadItems = inquiries.filter((i) => i.status === 'unread');
     if (unreadItems.length === 0) {
-      return 'आपके पास कोई नया अपठित संदेश नहीं है। You have no unread buyer inquiries.';
+      return t('noUnreadAudio');
     }
     return unreadItems
-      .map(
-        (item, index) =>
-          `संदेश ${index + 1}: ${item.buyerName}, ${item.buyerCompany} से। उत्पाद: ${
-            item.productTitleHindi || item.productTitleEnglish
-          }। संदेश: ${item.messageHindi || item.messageOriginal}`
+      .map((item, index) =>
+        `${t('audioInquiryPrefix')} ${index + 1}: ${t('audioInquiryFrom')} ${item.buyerName} ${t('audioInquiryAt')} ${item.buyerCompany}. ${t('audioInquiryProduct')}: ${
+              currentLanguage === 'en' ? (item.productTitleEnglish || item.productTitleHindi) : (item.productTitleHindi || item.productTitleEnglish)
+            }. ${t('audioInquiryMessage')}: ${currentLanguage === 'en' ? (item.messageOriginal || item.messageHindi) : (item.messageHindi || item.messageOriginal)}`
       )
       .join(' ... ');
-  }, [inquiries]);
+  }, [inquiries, currentLanguage]);
 
   const handleInquiryPress = (inquiry) => {
     navigation.navigate('InquiryThread', { inquiry });
@@ -61,9 +60,7 @@ export default function InquiriesList({ navigation }) {
   const handleCompose = () => {
     Alert.alert(
       t('composeInquiry'),
-      currentLanguage === 'en'
-        ? 'Compose a new direct craft inquiry or quotation for registered wholesale buyers.'
-        : 'पंजीकृत थोक खरीदारों के लिए एक नया सीधा शिल्प संदेश या कोटेशन तैयार करें।',
+      t('composeInquiryDesc'),
       [{ text: 'OK' }]
     );
   };
@@ -125,7 +122,11 @@ export default function InquiriesList({ navigation }) {
           </View>
 
           <View style={styles.timeStatusCol}>
-            <Text style={styles.timestamp}>{item.timestamp}</Text>
+            <Text style={styles.timestamp}>
+              {currentLanguage === 'en'
+                ? item.timestampEnglish || (item.timestamp?.includes('·') ? item.timestamp.split('·')[1].trim() : item.timestamp)
+                : item.timestampHindi || item.timestamp}
+            </Text>
             <View style={[styles.statusBadge, { backgroundColor: statusBg }]}>
               <Text style={[styles.statusBadgeText, { color: statusTextColor }]}>
                 {statusText}
@@ -198,9 +199,9 @@ export default function InquiriesList({ navigation }) {
   const renderEmptyState = () => (
     <IllustratedEmptyState
       type="inquiries"
-      titleHindi="अभी कोई खरीदार संदेश नहीं है"
+      titleHindi={t('noInquiriesYet')}
       titleEnglish="No buyer inquiries yet"
-      descHindi="जब खरीदार आपकी हस्तशिल्प कला देखेंगे, उनके संदेश और पूछताछ यहाँ दिखाई देंगे।"
+      descHindi={t('noInquiriesDesc')}
       descEnglish="When buyers across the world discover your craft listings, their inquiries will appear right here."
     />
   );
@@ -210,7 +211,7 @@ export default function InquiriesList({ navigation }) {
       {/* 1. TabRootHeader with dynamic title and unread badge */}
       <TabRootHeader
         title={t('buyerInquiriesHeadline')}
-        subtitle="सीधी खरीदार बातचीत • Direct Buyer Inquiries"
+        subtitle={t('inquiriesSubtitle')}
         rightElement={
           <View style={styles.unreadHeaderBadge}>
             <Text style={styles.unreadHeaderBadgeText}>

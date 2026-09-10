@@ -46,7 +46,7 @@ export default function LanguageSelect({ navigation }) {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
         <View style={styles.brandBadge}>
-          <Text style={styles.brandBadgeText}>शिल्पकला • SHILPKALA</Text>
+          <Text style={styles.brandBadgeText}>{t('brandBadge')} • SHILPKALA</Text>
         </View>
         <BilingualText
           txKey="selectLanguageTitle"

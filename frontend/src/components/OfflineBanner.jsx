@@ -4,9 +4,11 @@ import { useNetInfo } from '@react-native-community/netinfo';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
+import { useTranslation } from '../i18n';
 
 export default function OfflineBanner() {
   const netInfo = useNetInfo();
+  const { t, currentLanguage } = useTranslation();
   const isOffline = netInfo.isConnected === false || netInfo.isInternetReachable === false;
   const slideAnim = useRef(new Animated.Value(-60)).current;
 
@@ -41,10 +43,10 @@ export default function OfflineBanner() {
         <Ionicons name="cloud-offline" size={18} color={colors.surface.white} />
         <View style={styles.textCol}>
           <Text style={styles.bannerTextPrimary}>
-            आप ऑफ़लाइन हैं · You're offline
+            {currentLanguage === 'en' ? t('offlineTitle') : `${t('offlineTitle')} · You're offline`}
           </Text>
           <Text style={styles.bannerTextSecondary}>
-            इंटरनेट जुड़ने पर शिल्प डेटा स्वतः सिंक होगा • Syncs when online
+            {currentLanguage === 'en' ? t('offlineSubtitle') : `${t('offlineSubtitle')} • Syncs when online`}
           </Text>
         </View>
       </View>

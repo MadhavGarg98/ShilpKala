@@ -23,15 +23,14 @@ export default function ListingReview({ route, navigation }) {
   const imageUri =
     route?.params?.imageUri ||
     require('../../../assets/images/products/banarasi-saree.jpg');
-  const transcript = route?.params?.transcript || 'हस्तनिर्मित पारंपरिक भारतीय शिल्प';
+  const { t, currentLanguage } = useTranslation();
+  const transcript = route?.params?.transcript || t('handmadeTraditionalCraft');
 
   const [loading, setLoading] = useState(true);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [productDetails, setProductDetails] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
   const [retryCount, setRetryCount] = useState(0);
-
-  const { t, currentLanguage } = useTranslation();
 
   useEffect(() => {
     let isMounted = true;
@@ -41,21 +40,24 @@ export default function ListingReview({ route, navigation }) {
       setErrorMessage(null);
 
       try {
-        const data = await generateListingFromAudio({
+        console.log('[ListingReview] Calling generateListing with transcript:', transcript);
+        const details = await generateListing({
           transcript,
-          imageUri,
+          imageUri: typeof imageUri === 'string' ? imageUri : null,
           languageCode: currentLanguage || 'hi-IN',
-          craftType: 'Handloom Weaving',
         });
 
         if (isMounted) {
-          setProductDetails(data);
-          setLoading(false);
+          console.log('[ListingReview] Generated listing:', details);
+          setProductDetails(details);
         }
       } catch (err) {
-        console.error('[ListingReview] Error generating listing:', err);
+        console.error('[ListingReview] Failed to generate listing:', err);
         if (isMounted) {
-          setErrorMessage(err.message || 'Listing generation request failed');
+          setErrorMessage(err.message || 'Connection failed');
+        }
+      } finally {
+        if (isMounted) {
           setLoading(false);
         }
       }
@@ -67,19 +69,30 @@ export default function ListingReview({ route, navigation }) {
       isMounted = false;
       stopTextToSpeech();
     };
-  }, [imageUri, transcript, retryCount, currentLanguage]);
+  }, [transcript, imageUri, currentLanguage, retryCount]);
 
-  const handleToggleAudio = () => {
+  const handlePlayAudio = async () => {
     if (isPlayingAudio) {
-      stopTextToSpeech();
+      await stopTextToSpeech();
       setIsPlayingAudio(false);
-    } else {
+      return;
+    }
+
+    setIsPlayingAudio(true);
+    try {
       const textToSpeak =
         currentLanguage === 'en'
-          ? productDetails?.descriptionEnglish || productDetails?.description || ''
-          : productDetails?.description || productDetails?.descriptionEnglish || '';
-      playTextToSpeech(textToSpeak, currentLanguage === 'en' ? 'en-US' : 'hi-IN');
-      setIsPlayingAudio(true);
+          ? `${productDetails?.titleEnglish || ''}. ${productDetails?.descriptionEnglish || ''}`
+          : `${productDetails?.title || ''}. ${productDetails?.description || ''}`;
+
+      await playTextToSpeech({
+        text: textToSpeak,
+        languageCode: currentLanguage || 'hi-IN',
+      });
+    } catch (err) {
+      console.warn('[ListingReview] Audio playback error:', err);
+    } finally {
+      setIsPlayingAudio(false);
     }
   };
 
@@ -90,7 +103,7 @@ export default function ListingReview({ route, navigation }) {
   const handleFallbackContinue = () => {
     // Graceful fallback listing in case of offline demo venue
     const fallbackData = {
-      title: transcript.length > 5 ? transcript.slice(0, 45) : 'हाथ से बुनी बनारसी साड़ी',
+      title: transcript.length > 5 ? transcript.slice(0, 45) : t('handwovenBanarasiSaree'),
       titleEnglish: 'Handcrafted Authentic Artisan Craft',
       description: transcript,
       descriptionEnglish: 'Authentic handcrafted heritage artisan item created with traditional methods.',
@@ -117,10 +130,7 @@ export default function ListingReview({ route, navigation }) {
     });
   };
 
-  const buttonTitle =
-    currentLanguage === 'en'
-      ? 'Continue to Heritage Match'
-      : `${t('continueToHeritage')} / Heritage Match`;
+  const buttonTitle = t('continueToHeritage');
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -131,7 +141,7 @@ export default function ListingReview({ route, navigation }) {
           <ActivityIndicator size="large" color={colors.primary.rust} />
           <Text style={styles.loaderTextPrimary}>{t('aiGenerating')}</Text>
           <Text style={styles.loaderTextSecondary}>
-            कारीगर के ध्वनि विवरण एवं उत्पाद छवि का एआई विश्लेषण जारी है...
+            {t('aiAnalysisSub')}
           </Text>
         </View>
       ) : errorMessage ? (
@@ -141,17 +151,17 @@ export default function ListingReview({ route, navigation }) {
             <Ionicons name="cloud-offline-outline" size={44} color={colors.primary.rust} />
           </View>
           <Text style={styles.errorHeading}>
-            विवरण उत्पन्न करने में समस्या • Generation Notice
+            {t('generationNotice')}
           </Text>
           <Text style={styles.errorSubtext}>
-            सर्वर से संपर्क नहीं हो पाया ({errorMessage})। कृपया पुनः प्रयास करें।
+            {t('serverContactError')} ({errorMessage})
           </Text>
           <TouchableOpacity onPress={handleRetry} style={styles.retryLargeBtn}>
             <Ionicons name="reload" size={18} color={colors.surface.white} />
-            <Text style={styles.retryLargeBtnText}>पुनः प्रयास करें / Retry AI</Text>
+            <Text style={styles.retryLargeBtnText}>{t('retryAiBtn')}</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={handleFallbackContinue} style={styles.fallbackBtn}>
-            <Text style={styles.fallbackBtnText}>मूल विवरण के साथ आगे बढ़ें / Continue</Text>
+            <Text style={styles.fallbackBtnText}>{t('continueWithOriginal')}</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -247,7 +257,7 @@ export default function ListingReview({ route, navigation }) {
             />
             <Text style={styles.infoBannerText}>
               {productDetails?.languageName
-                ? `पहचानी गई भाषा: ${productDetails.languageName} • Artisan Voice Analysis Complete`
+                ? `${t('detectedLanguagePrefix')} ${productDetails.languageName} • Artisan Voice Analysis Complete`
                 : t('reviewInfoNote')}
             </Text>
           </View>

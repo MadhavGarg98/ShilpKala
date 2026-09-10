@@ -140,9 +140,8 @@ export default function ProductsScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <TabRootHeader
-        titleHindi="उत्पाद सूची"
-        titleEnglish="Products"
-        subtitle="आपकी पूरी हस्तशिल्प सूची • Complete Catalog"
+        title={t('navProducts')}
+        subtitle={t('productsCatalogSubtitle')}
       />
 
       {/* Filter Chips */}

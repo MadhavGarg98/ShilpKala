@@ -1,5 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import { useAppStore } from '../store/useAppStore';
+import { t, normalizeLanguageCode } from '../i18n';
 
 // Configure local notification behavior
 Notifications.setNotificationHandler({
@@ -10,8 +11,15 @@ Notifications.setNotificationHandler({
   }),
 });
 
+function getLang() {
+  const lang = useAppStore.getState().selectedLanguage;
+  return normalizeLanguageCode(lang);
+}
+
 // TODO: BACKEND — replace local notification trigger with real push notification event
 export async function simulateIncomingInquiry(buyerName, company) {
+  const lang = getLang();
+
   const newInquiry = {
     id: `i${Date.now()}`,
     productId: 'p1', // mock relation
@@ -20,9 +28,9 @@ export async function simulateIncomingInquiry(buyerName, company) {
     buyerAvatar: `https://i.pravatar.cc/150?u=${encodeURIComponent(buyerName)}`,
     timestamp: 'Just now',
     messageOriginal: 'I am interested in ordering this item. What are your delivery timelines?',
-    messageHindi: 'मुझे यह आइटम ऑर्डर करने में दिलचस्पी है। आपकी डिलीवरी समयसीमा क्या है?',
+    messageHindi: t('inquiryMessageHindi', lang),
     status: 'unread',
-    tags: ['नई पूछताछ'],
+    tags: [t('newInquiryTag', lang)],
   };
 
   useAppStore.getState().addInquiry(newInquiry);
@@ -34,8 +42,8 @@ export async function simulateIncomingInquiry(buyerName, company) {
     message: `${buyerName} sent a new message.`,
     timestamp: 'Just now',
     isRead: false,
-    group: 'आज · TODAY',
-    actionText: 'जवाब दें · View Chat',
+    group: t('groupToday', lang),
+    actionText: t('viewChatActionNotif', lang),
   };
 
   useAppStore.getState().addNotification(newNotification);

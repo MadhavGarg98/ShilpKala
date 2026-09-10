@@ -3,7 +3,9 @@ const ramniwasAvatar = require('../../assets/images/avatars/ramniwas.jpg');
 
 export const mockArtisan = {
   id: 'artisan-123',
-  name: 'राम निवास (Ram Niwas)',
+  name: 'Ram Niwas',
+  nameHindi: 'राम निवास',
+  nameEnglish: 'Ram Niwas',
   phone: '+919876543210',
   craftType: 'Handloom Weaving',
   craftTypeKey: 'craft.handloom.label',

@@ -2,7 +2,7 @@ import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
 // Current development machine LAN IP on the local Wi-Fi network
-export const DEFAULT_LAN_IP = '10.85.233.220';
+export const DEFAULT_LAN_IP = '10.20.41.146';
 export const DEFAULT_PORT = '8000';
 
 /**

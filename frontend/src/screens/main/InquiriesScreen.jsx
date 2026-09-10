@@ -46,11 +46,11 @@ export default function InquiriesScreen() {
   const getStatusStyle = (status) => {
     switch (status) {
       case 'unread':
-        return { bg: '#FFF2EB', text: colors.primary.rust, label: 'नई • New' };
+        return { bg: '#FFF2EB', text: colors.primary.rust, label: t('statusNewLabel') };
       case 'read':
-        return { bg: '#F3EDE2', text: colors.navy.deep, label: 'पढ़ा • Read' };
+        return { bg: '#F3EDE2', text: colors.navy.deep, label: t('statusReadLabel') };
       case 'replied':
-        return { bg: '#F3FAF5', text: colors.status.green, label: 'जवाब दिया • Replied' };
+        return { bg: '#F3FAF5', text: colors.status.green, label: t('statusRepliedLabel') };
       default:
         return { bg: '#F3EDE2', text: colors.text.muted, label: status };
     }
@@ -64,10 +64,8 @@ export default function InquiriesScreen() {
       setReplyText('');
       setExpandedId(null);
       Alert.alert(
-        currentLanguage === 'en' ? 'Reply Sent' : 'जवाब भेजा गया',
-        currentLanguage === 'en'
-          ? 'Your reply has been sent to the buyer.'
-          : 'खरीदार को आपका जवाब भेज दिया गया है।'
+        t('replySentTitle'),
+        t('replySentMsg')
       );
     } catch (err) {
       console.error('Reply error:', err);
@@ -88,10 +86,10 @@ export default function InquiriesScreen() {
       replied: inquiries.filter((i) => i.status === 'replied').length,
     };
     const labels = {
-      all: 'सभी · All',
-      unread: 'नई · New',
-      read: 'पढ़ा · Read',
-      replied: 'जवाब · Replied',
+      all: t('filterAll'),
+      unread: t('filterNew'),
+      read: t('filterRead'),
+      replied: t('filterReplied'),
     };
     return `${labels[filter]} (${counts[filter]})`;
   };
@@ -187,19 +185,19 @@ export default function InquiriesScreen() {
                 placeholder={
                   currentLanguage === 'en'
                     ? 'Type your reply...'
-                    : 'अपना जवाब टाइप करें...'
+                    : t('replyPlaceholder')
                 }
                 placeholderTextColor={colors.text.muted}
                 multiline
               />
               <VoiceInputButton
                 size={36}
-                mockText="हां, थोक मूल्य ₹5,800 प्रति पीस है। 50 पीस के लिए विशेष छूट उपलब्ध है।"
+                mockText={t('voiceReplyMockText')}
                 onTranscribed={handleVoiceReply}
               />
             </View>
             <PrimaryButton
-              title={currentLanguage === 'en' ? 'Send Reply' : 'जवाब भेजें'}
+              title={t('sendReplyBtn')}
               loading={replying}
               disabled={!replyText.trim()}
               onPress={() => handleReply(item.id)}
@@ -214,7 +212,7 @@ export default function InquiriesScreen() {
             <Text style={styles.repliedNoteText}>
               {currentLanguage === 'en'
                 ? 'You have replied to this inquiry'
-                : 'आपने इस पूछताछ का जवाब दे दिया है'}
+                : t('repliedConfirmation')}
             </Text>
           </View>
         )}
@@ -228,12 +226,12 @@ export default function InquiriesScreen() {
       <Text style={styles.emptyTitle}>
         {currentLanguage === 'en'
           ? 'No Inquiries Yet'
-          : 'अभी कोई पूछताछ नहीं'}
+          : t('noInquiriesYet')}
       </Text>
       <Text style={styles.emptyDesc}>
         {currentLanguage === 'en'
           ? 'When buyers send inquiries about your products, they will appear here.'
-          : 'जब खरीदार आपके उत्पादों के बारे में पूछताछ करेंगे, वे यहां दिखाई देंगी।'}
+          : t('noInquiriesYetDesc')}}
       </Text>
     </View>
   );
@@ -241,9 +239,8 @@ export default function InquiriesScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <TabRootHeader
-        titleHindi="ग्राहक पूछताछ"
-        titleEnglish="Inquiries"
-        subtitle="सीधी खरीदार बातचीत • Direct Buyer Inquiries"
+        title={t('inquiriesTitle')}
+        subtitle={t('inquiriesSubtitle')}
       />
 
       {/* Filter Chips */}

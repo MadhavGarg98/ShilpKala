@@ -46,17 +46,23 @@ export default function VoiceReply({ route, navigation }) {
   }, [hasCaptured]);
 
   // Seed response text if a quick-reply chip was selected, or use default mock transcription
-  const mockHindiResponse =
+  const mockVoiceResponse =
     selectedReply ||
-    (inquiry?.isBulk
-      ? `नमस्ते ${inquiry?.buyerName || ''}, हम 50 पीस का पूरा बैच 25 दिनों में तैयार कर सकते हैं। थोक छूट के साथ ₹5,800 प्रति पीस रहेगा।`
-      : inquiry?.isGiQuery
-      ? `नमस्ते ${inquiry?.buyerName || ''}, हमारी हर साड़ी पर भारत सरकार का आधिकारिक GI-IN-99 टैग और क्यूआर कोड उपलब्ध है।`
-      : `नमस्ते ${inquiry?.buyerName || ''}, आपकी रुचि के लिए धन्यवाद। हम आपके ऑर्डर के लिए सभी विवरण तुरंत उपलब्ध करा रहे हैं।`);
+    (currentLanguage === 'en'
+      ? (inquiry?.isBulk
+          ? `Hello ${inquiry?.buyerName || ''}, we can prepare the full batch of 50 pieces in 25 days with wholesale discount at ₹5,800 per piece.`
+          : inquiry?.isGiQuery
+          ? `Hello ${inquiry?.buyerName || ''}, every saree includes official GI-IN-99 certification tag and QR code.`
+          : `Hello ${inquiry?.buyerName || ''}, thank you for your interest. We are happy to assist with your order.`)
+      : (inquiry?.isBulk
+          ? t('voiceMockBulk').replace('{name}', inquiry?.buyerName || '')
+          : inquiry?.isGiQuery
+          ? t('voiceMockGi').replace('{name}', inquiry?.buyerName || '')
+          : t('voiceMockGeneral').replace('{name}', inquiry?.buyerName || '')));
 
   const handleTranscribed = (text) => {
     setIsRecording(false);
-    setTranscribedText(text || mockHindiResponse);
+    setTranscribedText(text || mockVoiceResponse);
     setHasCaptured(true);
   };
 
@@ -141,8 +147,8 @@ export default function VoiceReply({ route, navigation }) {
               />
               <Text style={styles.statusPillText}>
                 {hasCaptured
-                  ? 'रिकॉर्डिंग पूर्ण · Voice Captured'
-                  : 'माइक दबाकर बोलें · Tap Mic to Speak'}
+                  ? (currentLanguage === 'en' ? 'Voice Captured' : t('voiceCaptured'))
+                  : (currentLanguage === 'en' ? 'Tap Mic to Speak' : t('tapMicToSpeakButton'))}
               </Text>
             </View>
           </View>

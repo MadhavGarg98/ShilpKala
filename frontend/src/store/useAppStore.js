@@ -12,9 +12,9 @@ export const useAppStore = create((set, get) => ({
   // Artisan Profile
   artisanProfile: {
     ...mockArtisan,
-    name: 'राम निवास (Ram Niwas)',
-    location: 'वाराणसी, उत्तर प्रदेश (Varanasi, UP)',
-    craftType: 'हथकरघा बुनाई (Handloom Weaving)',
+    name: 'Ram Niwas',
+    location: 'Varanasi, UP',
+    craftType: 'Handloom Weaving',
     artisanIdStatus: 'Verified',
   },
   // Alias for backward compatibility
@@ -35,16 +35,32 @@ export const useAppStore = create((set, get) => ({
   setLanguage: (lang) => set({ selectedLanguage: lang }),
   
   updateArtisanProfile: (updates) =>
-    set((state) => ({
-      artisanProfile: { ...state.artisanProfile, ...updates },
-      artisan: { ...state.artisan, ...updates },
-    })),
+    set((state) => {
+      const merged = { ...state.artisanProfile, ...updates };
+      if (updates.name !== undefined) {
+        merged.name = updates.name;
+        merged.nameEnglish = updates.name;
+        merged.nameHindi = updates.name;
+      }
+      return {
+        artisanProfile: merged,
+        artisan: merged,
+      };
+    }),
 
   updateArtisan: (updates) =>
-    set((state) => ({
-      artisanProfile: { ...state.artisanProfile, ...updates },
-      artisan: { ...state.artisan, ...updates },
-    })),
+    set((state) => {
+      const merged = { ...state.artisanProfile, ...updates };
+      if (updates.name !== undefined) {
+        merged.name = updates.name;
+        merged.nameEnglish = updates.name;
+        merged.nameHindi = updates.name;
+      }
+      return {
+        artisanProfile: merged,
+        artisan: merged,
+      };
+    }),
 
   addProduct: (product) =>
     set((state) => ({

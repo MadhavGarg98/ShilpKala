@@ -36,7 +36,7 @@ export default function PublishSuccess({ route, navigation }) {
     // Add product to store on mount
     const newProduct = {
       id: `prod-${Date.now()}`,
-      titleHindi: productData?.titleHindi || productData?.title || 'हाथ से बुनी साड़ी',
+      titleHindi: productData?.titleHindi || productData?.title || (currentLanguage === 'en' ? 'Handwoven Saree' : t('product.p1.title')),
       titleEnglish: productData?.titleEnglish || productData?.title || 'Handwoven Saree',
       descriptionHindi: productData?.descriptionHindi || productData?.description || '',
       descriptionEnglish: productData?.descriptionEnglish || productData?.description || '',
@@ -89,11 +89,11 @@ export default function PublishSuccess({ route, navigation }) {
     const titleText =
       currentLanguage === 'en'
         ? productData?.titleEnglish || productData?.title || 'Handwoven Saree'
-        : productData?.titleHindi || productData?.title || 'हाथ से बुनी साड़ी';
+        : productData?.titleHindi || productData?.title || t('product.p1.title');
     const shareText =
       currentLanguage === 'en'
         ? `🧵 Check out my handcrafted product on ShilpKala!\n\n${titleText}\nPrice: ${priceText}\n\n🛒 Direct from artisan — zero commission.\n\n#ShilpKala #Handmade #MakeInIndia`
-        : `🧵 शिल्पकला पर मेरा हस्तशिल्प उत्पाद देखें!\n\n${titleText}\nमूल्य: ${priceText}\n\n🛒 सीधे कारीगर से — शून्य कमीशन।\n\n#शिल्पकला #हस्तशिल्प #मेकइनइंडिया`;
+        : `🧵 ShilpKala: ${titleText}\nPrice: ${priceText}\n\n🛒 Direct from artisan.\n\n#ShilpKala #MakeInIndia`;
 
     try {
       await Share.share({
@@ -179,7 +179,7 @@ export default function PublishSuccess({ route, navigation }) {
               {t(productData?.titleKey) ||
                 (currentLanguage === 'en'
                   ? productData?.titleEnglish || productData?.title || 'Handwoven Saree'
-                  : productData?.titleHindi || productData?.title || 'हाथ से बुनी साड़ी')}
+                  : productData?.titleHindi || productData?.title || t('product.p1.title'))}
             </Text>
             <Text style={styles.previewPrice}>
               ₹{(productData?.price || 6400).toLocaleString('en-IN')}

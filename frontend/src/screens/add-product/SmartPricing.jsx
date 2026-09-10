@@ -169,7 +169,7 @@ export default function SmartPricing({ route, navigation }) {
           </View>
 
           <Text style={styles.rangeSubtext}>
-            {pricingDetails?.citation || 'वस्त्र मंत्रालय लागत दिशा-निर्देशों एवं कारीगर मजदूरी मानकों पर आधारित'}
+            {pricingDetails?.citation || t('ministryCostingCitation')}
           </Text>
         </View>
 
@@ -178,7 +178,7 @@ export default function SmartPricing({ route, navigation }) {
           <View style={styles.errorNotice}>
             <Ionicons name="information-circle" size={16} color={colors.primary.rust} />
             <Text style={styles.errorNoticeText}>
-              स्थानीय लागत मॉडल सक्रिय है • Running on local transparent heuristic
+              {t('localHeuristicNotice')}
             </Text>
           </View>
         )}
@@ -279,7 +279,7 @@ export default function SmartPricing({ route, navigation }) {
             />
           </View>
           <Text style={styles.costHint}>
-            सामग्री लागत बदलते ही मूल्य सीमा स्वचालित रूप से अपडेट होती है • Auto-calculates as you type or speak
+            {t('pricingAutoCalcHint')}
           </Text>
         </View>
 
@@ -288,11 +288,10 @@ export default function SmartPricing({ route, navigation }) {
           <Ionicons name="document-text-outline" size={18} color={colors.navy.deep} />
           <View style={styles.transparencyCol}>
             <Text style={styles.transparencyTitle}>
-              पारदर्शिता अनुबंध • Honesty Disclosure
+              {t('honestyDisclosureTitle')}
             </Text>
             <Text style={styles.transparencyText}>
-              {pricingDetails?.disclaimer ||
-                'यह अनुमान वस्त्र मंत्रालय एवं निष्पक्ष व्यापार दिशानिर्देशों (लागत × 2.4-3.4) एवं जीआई प्रमाणन प्रीमियम (+30%) पर आधारित नियमों द्वारा निकाला गया है। यह कोई गुप्त या बंद एल्गोरिदम नहीं है।'}
+              {pricingDetails?.disclaimer || t('honestyDisclosureText')}
             </Text>
           </View>
         </View>
@@ -314,7 +313,7 @@ export default function SmartPricing({ route, navigation }) {
                   ₹{(item.price || 4800).toLocaleString('en-IN')}
                 </Text>
                 <Text style={styles.benchmarkStatus} numberOfLines={1}>
-                  {item.source_label || item.sourceLabel || 'सहकारी संदर्भ'}
+                  {item.source_label || item.sourceLabel || t('coopReference')}
                 </Text>
               </View>
             ))}

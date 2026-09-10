@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
 import PrimaryButton from './PrimaryButton';
+import { useTranslation } from '../i18n';
 
 export default function IllustratedEmptyState({
   type = 'products', // 'products' | 'inquiries'
@@ -15,21 +16,24 @@ export default function IllustratedEmptyState({
   onButtonPress,
   style,
 }) {
+  const { t, currentLanguage } = useTranslation();
   const isProducts = type === 'products';
 
   const defaultTitleHi = isProducts
-    ? 'अपनी पहली हस्तशिल्प कला जोड़ें'
-    : 'अभी कोई खरीदार पूछताछ नहीं है';
+    ? t('emptyStateAddCraft')
+    : t('emptyInquiriesTitle');
   const defaultTitleEn = isProducts
-    ? 'Add your first craft product to get started'
-    : 'No buyer inquiries yet';
+    ? t('emptyStateAddCraft')
+    : t('emptyInquiriesTitle');
 
   const defaultDescHi = isProducts
-    ? 'अपनी कला का फोटो लें या बोलकर बताएं। एआई तुरंत आपकी लिस्टिंग तैयार करेगा।'
-    : 'जब देश-विदेश के खरीदार आपके शिल्प देखेंगे, उनके संदेश यहाँ दिखाई देंगे।';
+    ? t('emptyStateAddCraftDesc')
+    : t('emptyInquiriesDesc');
   const defaultDescEn = isProducts
-    ? 'Capture a photo or speak about your craft to publish an authentic listing in seconds.'
-    : 'When buyers across India and abroad discover your crafts, their inquiries will land here.';
+    ? t('emptyStateAddCraftDesc')
+    : t('emptyInquiriesDesc');
+
+  const isEn = currentLanguage === 'en';
 
   return (
     <View style={[styles.container, style]}>
@@ -52,26 +56,47 @@ export default function IllustratedEmptyState({
       </View>
 
       {/* Title */}
-      <Text style={styles.headingPrimary}>
-        {titleHindi || defaultTitleHi}
-      </Text>
-      <Text style={styles.headingSecondary}>
-        {titleEnglish || defaultTitleEn}
-      </Text>
+      {isEn ? (
+        <Text style={styles.headingPrimary}>
+          {titleEnglish || defaultTitleEn}
+        </Text>
+      ) : (
+        <>
+          <Text style={styles.headingPrimary}>
+            {titleHindi || defaultTitleHi}
+          </Text>
+          <Text style={styles.headingSecondary}>
+            {titleEnglish || defaultTitleEn}
+          </Text>
+        </>
+      )}
 
       {/* Description */}
-      <Text style={styles.description}>
-        {descHindi || defaultDescHi}
-      </Text>
-      <Text style={styles.descriptionSecondary}>
-        {descEnglish || defaultDescEn}
-      </Text>
+      {isEn ? (
+        <Text style={styles.description}>
+          {descEnglish || defaultDescEn}
+        </Text>
+      ) : (
+        <>
+          <Text style={styles.description}>
+            {descHindi || defaultDescHi}
+          </Text>
+          <Text style={styles.descriptionSecondary}>
+            {descEnglish || defaultDescEn}
+          </Text>
+        </>
+      )}
 
       {/* Optional CTA Button */}
       {onButtonPress ? (
         <View style={styles.buttonWrapper}>
           <PrimaryButton
-            title={buttonTitle || (isProducts ? 'पहला उत्पाद जोड़ें · Add Product' : 'संदेश भेजें')}
+            title={
+              buttonTitle ||
+              (isProducts
+                ? (isEn ? t('addProduct') : `${t('addProduct')} · Add Product`)
+                : (isEn ? t('sendMessageBtn') : `${t('sendMessageBtn')} · Send Message`))
+            }
             leadingIcon={isProducts ? 'add-circle-outline' : 'paper-plane-outline'}
             onPress={onButtonPress}
           />

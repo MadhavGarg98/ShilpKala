@@ -10,6 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
 import { playTextToSpeech, stopTextToSpeech } from '../services/audio';
+import { useTranslation } from '../i18n';
 
 export default function AudioPlayerInline({
   textToSpeak = '',
@@ -20,6 +21,7 @@ export default function AudioPlayerInline({
   style,
   onPlayStateChange,
 }) {
+  const { t, currentLanguage } = useTranslation();
   const [isPlaying, setIsPlaying] = useState(false);
   const waveAnim1 = useRef(new Animated.Value(0.4)).current;
   const waveAnim2 = useRef(new Animated.Value(0.8)).current;
@@ -123,8 +125,8 @@ export default function AudioPlayerInline({
           numberOfLines={1}
         >
           {isPlaying
-            ? playingLabel || 'चल रहा है... · Playing'
-            : label || 'संदेश सुनें · Listen'}
+            ? playingLabel || (currentLanguage === 'en' ? 'Playing...' : t('playingAudio'))
+            : label || (currentLanguage === 'en' ? 'Listen' : t('listenAudio'))}
         </Text>
 
         {/* Waveform Bars */}

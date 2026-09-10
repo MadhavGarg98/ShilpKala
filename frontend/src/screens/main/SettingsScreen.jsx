@@ -46,9 +46,9 @@ export default function SettingsScreen({ navigation }) {
 
   // Edit profile modal state
   const [profileModalVisible, setProfileModalVisible] = useState(false);
-  const [name, setName] = useState(artisanProfile?.name || 'राम निवास (Ram Niwas)');
-  const [craftType, setCraftType] = useState(artisanProfile?.craftType || 'हथकरघा बुनाई (Handloom Weaving)');
-  const [location, setLocation] = useState(artisanProfile?.location || 'वाराणसी, उत्तर प्रदेश (Varanasi, UP)');
+  const [name, setName] = useState(artisanProfile?.name || t('defaultArtisanName'));
+  const [craftType, setCraftType] = useState(artisanProfile?.craftType || t('defaultCraftType'));
+  const [location, setLocation] = useState(artisanProfile?.location || t('defaultArtisanLocation'));
 
   const handleSelectLanguage = (langCode) => {
     setLanguage(langCode);
@@ -63,24 +63,20 @@ export default function SettingsScreen({ navigation }) {
     });
     setProfileModalVisible(false);
     Alert.alert(
-      currentLanguage === 'en' ? 'Profile Updated' : 'प्रोफ़ाइल अपडेट हुई',
-      currentLanguage === 'en'
-        ? 'Your artisan profile details have been saved.'
-        : 'आपका कारीगर विवरण सफलतापूर्वक सहेज लिया गया है।',
+      t('profileUpdatedTitle'),
+      t('profileUpdatedMsg'),
       [{ text: 'OK' }]
     );
   };
 
   const handleLogout = () => {
     Alert.alert(
-      currentLanguage === 'en' ? 'Log Out' : 'लॉग आउट',
-      currentLanguage === 'en'
-        ? 'Are you sure you want to log out? You will return to language selection.'
-        : 'क्या आप लॉग आउट करना चाहते हैं? आप भाषा चयन स्क्रीन पर वापस जाएंगे।',
+      t('logOutTitle'),
+      t('logOutConfirmMsg'),
       [
-        { text: currentLanguage === 'en' ? 'Cancel' : 'रद्द करें', style: 'cancel' },
+        { text: t('cancel'), style: 'cancel' },
         {
-          text: currentLanguage === 'en' ? 'Log Out' : 'लॉग आउट',
+          text: t('logOutBtn'),
           style: 'destructive',
           onPress: () => {
             resetOnboarding();
@@ -110,7 +106,7 @@ export default function SettingsScreen({ navigation }) {
           <Ionicons name="chevron-back" size={24} color={colors.navy.deep} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>
-          {currentLanguage === 'en' ? 'Settings' : 'सेटिंग्स · Settings'}
+          {t('settingsHeader')}
         </Text>
         <View style={styles.headerRightSlot} />
       </View>
@@ -126,7 +122,11 @@ export default function SettingsScreen({ navigation }) {
             style={styles.avatar}
           />
           <View style={styles.profileMeta}>
-            <Text style={styles.artisanName}>{artisanProfile?.name}</Text>
+            <Text style={styles.artisanName}>
+              {currentLanguage === 'en'
+                ? (artisanProfile?.nameEnglish || artisanProfile?.name)
+                : (artisanProfile?.nameHindi || artisanProfile?.name)}
+            </Text>
             <Text style={styles.artisanCraft}>{artisanProfile?.craftType}</Text>
             <Text style={styles.artisanLocation}>📍 {artisanProfile?.location}</Text>
           </View>
@@ -141,7 +141,7 @@ export default function SettingsScreen({ navigation }) {
 
         {/* Section 1: Preferences */}
         <Text style={styles.sectionHeader}>
-          {currentLanguage === 'en' ? 'PREFERENCES' : 'प्राथमिकताएं · PREFERENCES'}
+          {t('sectionPreferences')}
         </Text>
 
         {/* Row: Change Language */}
@@ -155,10 +155,10 @@ export default function SettingsScreen({ navigation }) {
           </View>
           <View style={styles.rowTextCol}>
             <Text style={styles.rowTitlePrimary}>
-              {currentLanguage === 'en' ? 'App Language' : 'ऐप की भाषा · Language'}
+              {t('appLanguageLabel')}
             </Text>
             <Text style={styles.rowTitleSecondary}>
-              {currentLangObj.labelHindi} ({currentLangObj.labelEnglish})
+              {currentLanguage === 'en' ? currentLangObj.labelEnglish : `${currentLangObj.labelHindi} (${currentLangObj.labelEnglish})`}
             </Text>
           </View>
           <Ionicons name="chevron-forward" size={18} color={colors.text.muted} />
@@ -166,7 +166,7 @@ export default function SettingsScreen({ navigation }) {
 
         {/* Section 2: Account & Verification */}
         <Text style={styles.sectionHeader}>
-          {currentLanguage === 'en' ? 'VERIFICATION & ID' : 'प्रमाणीकरण व पहचान · VERIFICATION'}
+          {t('sectionVerification')}
         </Text>
 
         {/* Row: Government Artisan ID */}
@@ -176,7 +176,7 @@ export default function SettingsScreen({ navigation }) {
           </View>
           <View style={styles.rowTextCol}>
             <Text style={styles.rowTitlePrimary}>
-              {currentLanguage === 'en' ? 'Government Artisan ID' : 'सरकारी कारीगर पहचान पत्र'}
+              {t('govtArtisanId')}
             </Text>
             <Text style={styles.rowTitleSecondary}>
               Govt of India Ministry of Textiles • Verified #ART-9924
@@ -199,10 +199,10 @@ export default function SettingsScreen({ navigation }) {
           </View>
           <View style={styles.rowTextCol}>
             <Text style={styles.rowTitlePrimary}>
-              {currentLanguage === 'en' ? 'Edit Artisan Profile' : 'कारीगर प्रोफ़ाइल संपादित करें'}
+              {t('editArtisanProfile')}
             </Text>
             <Text style={styles.rowTitleSecondary}>
-              {currentLanguage === 'en' ? 'Name, Craft Type, Workshop Location' : 'नाम, शिल्प श्रेणी, कार्यशाला स्थान'}
+              {t('profileSubFields')}
             </Text>
           </View>
           <Ionicons name="chevron-forward" size={18} color={colors.text.muted} />
@@ -210,7 +210,7 @@ export default function SettingsScreen({ navigation }) {
 
         {/* Section 3: App Info */}
         <Text style={styles.sectionHeader}>
-          {currentLanguage === 'en' ? 'ABOUT' : 'शिल्पकला के बारे में · ABOUT'}
+          {t('sectionAbout')}
         </Text>
 
         <View style={styles.settingRow}>
@@ -226,7 +226,7 @@ export default function SettingsScreen({ navigation }) {
         {/* Logout Button */}
         <View style={styles.logoutWrapper}>
           <SecondaryButton
-            title={currentLanguage === 'en' ? 'Log Out' : 'लॉग आउट · Log Out'}
+            title={t('logOutBtn')}
             leadingIcon="log-out-outline"
             onPress={handleLogout}
             style={styles.logoutBtn}
@@ -244,7 +244,9 @@ export default function SettingsScreen({ navigation }) {
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>भाषा चुनें · Select Language</Text>
+              <Text style={styles.modalTitle}>
+                {t('selectLanguageModal')}
+              </Text>
               <TouchableOpacity
                 onPress={() => setLangModalVisible(false)}
                 style={styles.closeBtn}
@@ -273,16 +275,18 @@ export default function SettingsScreen({ navigation }) {
                         isSelected && styles.langTextSelected,
                       ]}
                     >
-                      {lang.labelHindi}
+                      {currentLanguage === 'en' ? lang.labelEnglish : lang.labelHindi}
                     </Text>
-                    <Text
-                      style={[
-                        styles.langTextSecondary,
-                        isSelected && styles.langTextSelected,
-                      ]}
-                    >
-                      {lang.labelEnglish}
-                    </Text>
+                    {currentLanguage !== 'en' && (
+                      <Text
+                        style={[
+                          styles.langTextSecondary,
+                          isSelected && styles.langTextSelected,
+                        ]}
+                      >
+                        {lang.labelEnglish}
+                      </Text>
+                    )}
                     {isSelected && (
                       <Ionicons
                         name="checkmark"
@@ -309,7 +313,9 @@ export default function SettingsScreen({ navigation }) {
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>कारीगर विवरण · Edit Profile</Text>
+              <Text style={styles.modalTitle}>
+                {t('editProfileModal')}
+              </Text>
               <TouchableOpacity
                 onPress={() => setProfileModalVisible(false)}
                 style={styles.closeBtn}
@@ -320,7 +326,9 @@ export default function SettingsScreen({ navigation }) {
 
             <ScrollView style={{ maxHeight: 420 }}>
               {/* Name */}
-              <Text style={styles.inputLabel}>कारीगर का नाम · Name</Text>
+              <Text style={styles.inputLabel}>
+                {t('artisanNameInputLabel')}
+              </Text>
               <View style={styles.inputWithVoice}>
                 <TextInput
                   style={styles.textInput}
@@ -329,13 +337,15 @@ export default function SettingsScreen({ navigation }) {
                 />
                 <VoiceInputButton
                   size={38}
-                  mockText="राम निवास (Ram Niwas)"
+                  mockText={t('voiceNameMockText')}
                   onTranscribed={setName}
                 />
               </View>
 
               {/* Craft Type */}
-              <Text style={styles.inputLabel}>शिल्प श्रेणी · Craft Type</Text>
+              <Text style={styles.inputLabel}>
+                {t('craftTypeInputLabel')}
+              </Text>
               <TextInput
                 style={styles.textInput}
                 value={craftType}
@@ -343,7 +353,9 @@ export default function SettingsScreen({ navigation }) {
               />
 
               {/* Location */}
-              <Text style={styles.inputLabel}>कार्यशाला स्थान · Location</Text>
+              <Text style={styles.inputLabel}>
+                {t('locationInputLabel')}
+              </Text>
               <TextInput
                 style={styles.textInput}
                 value={location}
@@ -352,7 +364,7 @@ export default function SettingsScreen({ navigation }) {
 
               <View style={{ marginTop: 20 }}>
                 <PrimaryButton
-                  title={currentLanguage === 'en' ? 'Save Changes' : 'सहेजें · Save'}
+                  title={t('saveChangesBtn')}
                   onPress={handleSaveProfile}
                 />
               </View>

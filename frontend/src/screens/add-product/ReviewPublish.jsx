@@ -29,13 +29,13 @@ export default function ReviewPublish({ route, navigation }) {
     (productData?.titleKey ? t(productData.titleKey) : null) ||
     (currentLanguage === 'en'
       ? productData?.titleEnglish || 'Handwoven Banarasi Silk Saree'
-      : productData?.titleHindi || 'हाथ से बुनी बनारसी रेशम साड़ी')
+      : (productData?.titleHindi || productData?.title || t('product.p1.title')))
   );
   const [description, setDescription] = useState(
     (productData?.descriptionKey ? t(productData.descriptionKey) : null) ||
     (currentLanguage === 'en'
       ? productData?.descriptionEnglish || 'Pure katan silk saree with gold zari motifs.'
-      : productData?.descriptionHindi || 'शुद्ध कातून रेशम साड़ी, सोने की ज़री बूटे।')
+      : (productData?.descriptionHindi || productData?.description || t('product.p1.description')))
   );
   const [price, setPrice] = useState(String(productData?.price || 6400));
 

@@ -8,10 +8,12 @@ import ProductsScreen from '../screens/main/ProductsScreen';
 import InquiriesStack from './InquiriesStack';
 import AlertsScreen from '../screens/main/AlertsScreen';
 import { useAppStore } from '../store/useAppStore';
+import { useTranslation } from '../i18n';
 
 const Tab = createBottomTabNavigator();
 
 export default function MainTabs() {
+  const { t } = useTranslation();
   const unreadInquiries = useAppStore((state) => state.unreadInquiryCount);
   const unreadNotifications = useAppStore((state) => state.unreadNotificationCount);
 
@@ -54,21 +56,21 @@ export default function MainTabs() {
         name="Home"
         component={HomeScreen}
         options={{
-          tabBarLabel: 'होम / Home',
+          tabBarLabel: t('navHome'),
         }}
       />
       <Tab.Screen
         name="Products"
         component={ProductsScreen}
         options={{
-          tabBarLabel: 'उत्पाद / Products',
+          tabBarLabel: t('navProducts'),
         }}
       />
       <Tab.Screen
         name="Inquiries"
         component={InquiriesStack}
         options={{
-          tabBarLabel: 'पूछताछ / Inquiries',
+          tabBarLabel: t('navInquiries'),
           tabBarBadge: unreadInquiries > 0 ? unreadInquiries : undefined,
           tabBarBadgeStyle: {
             backgroundColor: colors.primary.rust,
@@ -80,7 +82,7 @@ export default function MainTabs() {
         name="Alerts"
         component={AlertsScreen}
         options={{
-          tabBarLabel: 'सूचनाएं / Alerts',
+          tabBarLabel: t('navAlerts'),
           tabBarBadge: unreadNotifications > 0 ? unreadNotifications : undefined,
           tabBarBadgeStyle: {
             backgroundColor: colors.status.amber,

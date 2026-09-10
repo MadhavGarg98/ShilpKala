@@ -23,15 +23,25 @@ export default function BilingualText({
 
   const keyToUse = txKey || i18nKey;
 
-  // Resolve primary line from current language
-  const primaryText = keyToUse ? t(keyToUse) : hi;
-
-  // Resolve secondary line (always English unless current language is English)
+  let primaryText = '';
   let secondaryText = '';
+
   if (keyToUse) {
+    primaryText = t(keyToUse);
+    // When currentLanguage is English, never render a secondary line (no duplicate, no Hindi)
     secondaryText = currentLanguage === 'en' ? '' : getSecondary(keyToUse);
-  } else if (en && currentLanguage !== 'en') {
-    secondaryText = en;
+  } else {
+    // Direct props hi / en passed without i18n key
+    if (currentLanguage === 'en') {
+      primaryText = en || '';
+      secondaryText = '';
+    } else if (currentLanguage === 'hi') {
+      primaryText = hi || en || '';
+      secondaryText = en && en !== hi ? en : '';
+    } else {
+      primaryText = en || '';
+      secondaryText = '';
+    }
   }
 
   const sizeConfig =

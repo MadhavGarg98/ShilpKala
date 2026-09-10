@@ -27,14 +27,21 @@ export default function InquiryThread({ route, navigation }) {
     t(inquiry?.productTitleKey) ||
     (currentLanguage === 'en'
       ? inquiry?.productTitleEnglish || inquiry?.productTitleHindi || 'Handcrafted Craft'
-      : inquiry?.productTitleHindi || inquiry?.productTitleEnglish || 'हस्तशिल्प उत्पाद');
+      : inquiry?.productTitleHindi || inquiry?.productTitleEnglish || t('handcraftProduct'));
 
-  const suggestedReplies = inquiry?.suggestedReplies || [
-    'हाँ, यह उत्पाद उपलब्ध है (Yes, available)',
-    'थोक मूल्य पर छूट संभव है (Wholesale discount available)',
-    'आधिकारिक GI प्रमाण पत्र शामिल है (GI certificate included)',
-    'तैयार होने में 15 दिन लगेंगे (15 days crafting timeline)',
-  ];
+  const suggestedReplies = currentLanguage === 'en'
+    ? [
+        'Yes, this product is available',
+        'Wholesale discount is possible',
+        'Official GI certificate included',
+        '15 days crafting timeline',
+      ]
+    : [
+        t('quickReplyAvailable'),
+        t('quickReplyDiscount'),
+        t('quickReplyGiCert'),
+        t('quickReplyTimeline'),
+      ];
 
   const handleVoiceReply = () => {
     navigation.navigate('VoiceReply', {
@@ -48,7 +55,7 @@ export default function InquiryThread({ route, navigation }) {
       t('textReplyFallback'),
       currentLanguage === 'en'
         ? 'Voice reply is the recommended fast flow for artisans. Opening voice response studio...'
-        : 'कारीगरों के लिए आवाज़ से जवाब देना सबसे तेज़ और आसान तरीका है। वॉयस स्टूडियो खोला जा रहा है...',
+        : t('voiceReplyRecommend'),
       [
         {
           text: 'OK',
@@ -113,36 +120,42 @@ export default function InquiryThread({ route, navigation }) {
             <Text style={styles.originalMessageText}>
               {inquiry?.messageOriginal}
             </Text>
-            <Text style={styles.bubbleTimestamp}>{inquiry?.timestamp}</Text>
+            <Text style={styles.bubbleTimestamp}>
+              {currentLanguage === 'en'
+                ? inquiry?.timestampEnglish || (inquiry?.timestamp?.includes('·') ? inquiry?.timestamp.split('·')[1].trim() : inquiry?.timestamp)
+                : inquiry?.timestampHindi || inquiry?.timestamp}
+            </Text>
           </View>
         </View>
 
         {/* 4. AI-Translated Bubble (Visually distinct: tinted cream/orange + rust left border) */}
-        <View style={styles.messageBubbleWrapper}>
-          <View style={styles.bubbleHeaderRow}>
-            <View style={styles.aiIconBadge}>
-              <Ionicons name="sparkles" size={12} color={colors.primary.rust} />
+        {currentLanguage !== 'en' && (
+          <View style={styles.messageBubbleWrapper}>
+            <View style={styles.bubbleHeaderRow}>
+              <View style={styles.aiIconBadge}>
+                <Ionicons name="sparkles" size={12} color={colors.primary.rust} />
+              </View>
+              <Text style={styles.aiSenderLabel}>
+                {t('aiTranslation')}
+              </Text>
             </View>
-            <Text style={styles.aiSenderLabel}>
-              {t('aiTranslation')}
-            </Text>
-          </View>
 
-          <View style={styles.translatedBubble}>
-            <Text style={styles.translatedMessageText}>
-              {t(inquiry?.messageKey) || inquiry?.messageHindi}
-            </Text>
+            <View style={styles.translatedBubble}>
+              <Text style={styles.translatedMessageText}>
+                {t(inquiry?.messageKey) || inquiry?.messageHindi}
+              </Text>
 
-            {/* Embedded AudioPlayerInline inside the translated bubble */}
-            <AudioPlayerInline
-              textToSpeak={t(inquiry?.messageKey) || inquiry?.messageHindi}
-              language={currentLanguage === 'en' ? 'en-IN' : 'hi-IN'}
-              label="हिंदी में सुनें · Listen in Hindi"
-              playingLabel="ऑडियो चल रहा है... · Playing..."
-              variant="bubble"
-            />
+              {/* Embedded AudioPlayerInline inside the translated bubble */}
+              <AudioPlayerInline
+                textToSpeak={t(inquiry?.messageKey) || inquiry?.messageHindi}
+                language="hi-IN"
+                label={t('listenInHindi')}
+                playingLabel={t('audioPlaying')}
+                variant="bubble"
+              />
+            </View>
           </View>
-        </View>
+        )}
 
         {/* 5. Suggested Quick Reply Chips */}
         <View style={styles.quickRepliesSection}>

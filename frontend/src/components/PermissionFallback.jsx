@@ -12,6 +12,8 @@ import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
 import PrimaryButton from './PrimaryButton';
 import SecondaryButton from './SecondaryButton';
+import BilingualText from './BilingualText';
+import { useTranslation } from '../i18n';
 
 export default function PermissionFallback({
   type = 'camera', // 'camera' | 'microphone'
@@ -20,24 +22,14 @@ export default function PermissionFallback({
   style,
 }) {
   const isCamera = type === 'camera';
+  const { t, currentLanguage } = useTranslation();
 
   const handleOpenSettings = () => {
     Linking.openSettings();
   };
 
-  const titleHindi = isCamera
-    ? 'कैमरा अनुमति आवश्यक है'
-    : 'माइक्रोफ़ोन अनुमति आवश्यक है';
-  const titleEnglish = isCamera
-    ? 'Camera Permission Required'
-    : 'Microphone Permission Required';
-
-  const descHindi = isCamera
-    ? 'शिल्पकला को आपके हस्तशिल्प की तस्वीरें लेने के लिए कैमरे की अनुमति की आवश्यकता है।'
-    : 'शिल्पकला को आपकी मातृभाषा में शिल्प का विवरण और वॉयस जवाब रिकॉर्ड करने के लिए माइक की अनुमति चाहिए।';
-  const descEnglish = isCamera
-    ? 'ShilpKala needs camera access so you can photograph your authentic handcrafted products.'
-    : 'ShilpKala needs microphone access to capture voice descriptions and record buyer voice responses.';
+  const titleKey = isCamera ? 'cameraPermissionRequired' : 'micPermissionRequired';
+  const descKey = isCamera ? 'cameraPermissionDesc' : 'micPermissionDesc';
 
   return (
     <SafeAreaView style={[styles.safeArea, style]}>
@@ -56,27 +48,38 @@ export default function PermissionFallback({
         </View>
 
         {/* Title */}
-        <Text style={styles.titlePrimary}>{titleHindi}</Text>
-        <Text style={styles.titleSecondary}>{titleEnglish}</Text>
+        <BilingualText
+          txKey={titleKey}
+          size="lg"
+          align="center"
+          style={{ marginBottom: 12 }}
+          primaryStyle={styles.titlePrimary}
+          secondaryStyle={styles.titleSecondary}
+        />
 
         {/* Description */}
         <View style={styles.descCard}>
-          <Text style={styles.descPrimary}>{descHindi}</Text>
-          <Text style={styles.descSecondary}>{descEnglish}</Text>
+          <BilingualText
+            txKey={descKey}
+            size="sm"
+            align="center"
+            primaryStyle={styles.descPrimary}
+            secondaryStyle={styles.descSecondary}
+          />
         </View>
 
         {/* Settings Guidance Note */}
         <View style={styles.guidanceBox}>
           <Ionicons name="information-circle-outline" size={18} color={colors.navy.deep} />
           <Text style={styles.guidanceText}>
-            सेटिंग्स में जाकर अनुमति चालू करें • Enable in device settings
+            {t('enableInSettings')}
           </Text>
         </View>
 
         {/* Buttons */}
         <View style={styles.btnRow}>
           <PrimaryButton
-            title="सेटिंग्स खोलें · Open Settings"
+            title={t('openSettingsBtn')}
             leadingIcon="settings-outline"
             onPress={handleOpenSettings}
             style={styles.primaryBtn}
@@ -84,7 +87,7 @@ export default function PermissionFallback({
 
           {onRequestPermission && (
             <SecondaryButton
-              title="पुनः अनुमति मांगें · Try Again"
+              title={t('tryAgainBtn')}
               leadingIcon="refresh"
               onPress={onRequestPermission}
               style={styles.secondaryBtn}
@@ -98,7 +101,7 @@ export default function PermissionFallback({
               style={styles.backLink}
             >
               <Ionicons name="arrow-back" size={16} color={colors.text.muted} />
-              <Text style={styles.backLinkText}>वापस जाएं · Go Back</Text>
+              <Text style={styles.backLinkText}>{t('goBackBtn')}</Text>
             </TouchableOpacity>
           )}
         </View>

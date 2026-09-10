@@ -279,7 +279,7 @@ export async function generateListingFromAudio({ transcript, imageUri, languageC
   const url = resolveApiUrl('/api/listings/generate');
 
   const payload = {
-    transcript: transcript || 'हस्तनिर्मित पारंपरिक भारतीय शिल्प',
+    transcript: transcript || 'Handmade traditional Indian craft',
     language_code: languageCode || 'hi-IN',
     image_url: typeof imageUri === 'string' ? imageUri : null,
     craft_type: craftType,

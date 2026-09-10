@@ -1,6 +1,12 @@
 import { useAppStore } from '../store/useAppStore';
+import { t, normalizeLanguageCode } from '../i18n';
 
 const delay = (ms) => new Promise((res) => setTimeout(res, ms));
+
+function getLang() {
+  const lang = useAppStore.getState().selectedLanguage;
+  return normalizeLanguageCode(lang);
+}
 
 // TODO: BACKEND — replace with: GET /api/products
 export async function getProducts() {
@@ -11,10 +17,11 @@ export async function getProducts() {
 // TODO: BACKEND — replace with: POST /api/products { images, voiceTranscript, artisanId }
 export async function createListing(data) {
   await delay(1000);
+  const lang = getLang();
   
   const newProduct = {
     id: `p${Date.now()}`,
-    titleHindi: data.titleHindi || 'नया हस्तशिल्प उत्पाद',
+    titleHindi: data.titleHindi || t('newHandcraftProduct', lang),
     titleEnglish: data.titleEnglish || 'New Handcrafted Product',
     price: data.price || 0,
     status: data.status || 'live',

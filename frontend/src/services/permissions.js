@@ -2,16 +2,24 @@ import { Camera } from 'expo-camera';
 import { requestRecordingPermissionsAsync } from 'expo-audio';
 import * as Notifications from 'expo-notifications';
 import { Linking, Alert } from 'react-native';
+import { useAppStore } from '../store/useAppStore';
+import { t, normalizeLanguageCode } from '../i18n';
+
+function getLang() {
+  const lang = useAppStore.getState().selectedLanguage;
+  return normalizeLanguageCode(lang);
+}
 
 export async function requestCameraPermission() {
   const { status } = await Camera.requestCameraPermissionsAsync();
   if (status !== 'granted') {
+    const lang = getLang();
     Alert.alert(
-      'अनुमति आवश्यक है (Permission Required)',
-      'कैमरा उपयोग करने के लिए कृपया सेटिंग्स में अनुमति दें। (Please allow camera access in settings.)',
+      t('permissionRequired', lang),
+      t('cameraPermSettingsMsg', lang),
       [
-        { text: 'रद्द करें (Cancel)', style: 'cancel' },
-        { text: 'सेटिंग्स (Settings)', onPress: () => Linking.openSettings() }
+        { text: t('cancel', lang), style: 'cancel' },
+        { text: t('settingsBtn', lang), onPress: () => Linking.openSettings() }
       ]
     );
     return false;
@@ -22,12 +30,13 @@ export async function requestCameraPermission() {
 export async function requestMicrophonePermission() {
   const { status, granted } = await requestRecordingPermissionsAsync();
   if (status !== 'granted' && !granted) {
+    const lang = getLang();
     Alert.alert(
-      'अनुमति आवश्यक है (Permission Required)',
-      'माइक उपयोग करने के लिए कृपया सेटिंग्स में अनुमति दें। (Please allow microphone access in settings.)',
+      t('permissionRequired', lang),
+      t('micPermSettingsMsg', lang),
       [
-        { text: 'रद्द करें (Cancel)', style: 'cancel' },
-        { text: 'सेटिंग्स (Settings)', onPress: () => Linking.openSettings() }
+        { text: t('cancel', lang), style: 'cancel' },
+        { text: t('settingsBtn', lang), onPress: () => Linking.openSettings() }
       ]
     );
     return false;

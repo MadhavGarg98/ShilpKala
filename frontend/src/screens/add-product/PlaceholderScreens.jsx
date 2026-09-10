@@ -10,12 +10,12 @@ export function ListingReview({ route, navigation }) {
     <SafeAreaView style={styles.safeArea}>
       <StepFlowHeader step={3} total={3} title="Listing Review" />
       <View style={styles.container}>
-        <Text style={styles.title}>विवरण समीक्षा / Listing Review</Text>
+        <Text style={styles.title}>Listing Review</Text>
         <Text style={styles.desc}>
           {transcript || 'Voice transcription ready for Heritage & GI matching in next phase.'}
         </Text>
         <PrimaryButton
-          title="होम पर वापस जाएं / Back to Home"
+          title="Back to Home"
           onPress={() => navigation.navigate('MainTabs', { screen: 'Home' })}
           style={{ marginTop: 24 }}
         />

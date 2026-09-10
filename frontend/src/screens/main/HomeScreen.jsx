@@ -22,15 +22,15 @@ import { resolveImageSource } from '../../utils/imageUtils';
 
 const ARTISAN_TIPS = [
   {
-    hindi: 'अच्छी प्राकृतिक रोशनी में ली गई तस्वीरें ३ गुना अधिक खरीदारों को आकर्षित करती हैं।',
+    tipKey: 'tipNaturalLight',
     english: 'Photos taken in good natural daylight attract 3x more buyer inquiries.',
   },
   {
-    hindi: 'हथकरघा बुनाई की छोटी वीडियो खरीदारों में भरोसा और प्रामाणिकता बढ़ाती है।',
+    tipKey: 'tipCraftVideo',
     english: 'Short craft process clips build strong trust and authenticity with buyers.',
   },
   {
-    hindi: 'अपने उत्पाद के साथ जीआई (GI) प्रमाणन अवश्य जोड़ें — इससे अधिक मूल्य मिलता है।',
+    tipKey: 'tipGiCert',
     english: 'Always highlight your GI certification badge to command premium pricing.',
   },
 ];
@@ -102,21 +102,30 @@ export default function HomeScreen({ navigation }) {
   const currentTip = ARTISAN_TIPS[tipIndex];
 
   // Render Header & Widgets inside FlatList ListHeaderComponent
-  const renderHeader = () => (
-    <View style={styles.headerContainer}>
-      {/* 1. Artisan Greeting */}
-      <View style={styles.greetingRow}>
-        <View>
-          <Text style={styles.greetingPrimary}>
-            {t('welcomeArtisan')}, {artisanProfile?.name?.split(' ')[0] || 'कारीगर'} जी 🙏
-          </Text>
-          <Text style={styles.greetingSecondary}>
-            {t('storefrontSubtitle')}
-          </Text>
-        </View>
+  const renderHeader = () => {
+    const rawName = (artisanProfile?.name && artisanProfile.name.trim().length > 0)
+      ? artisanProfile.name.trim()
+      : (currentLanguage === 'en' ? artisanProfile?.nameEnglish : artisanProfile?.nameHindi) ||
+        t('artisanFallback');
+    const artisanFirstName = rawName.split(' ')[0] || t('artisanFallback');
+
+    return (
+      <View style={styles.headerContainer}>
+        {/* 1. Artisan Greeting */}
+        <View style={styles.greetingRow}>
+          <View>
+            <Text style={styles.greetingPrimary}>
+              {t('welcomeArtisan')}, {artisanFirstName} {currentLanguage === 'en' ? '👋' : 'जी 🙏'}
+            </Text>
+            <Text style={styles.greetingSecondary}>
+              {t('storefrontSubtitle')}
+            </Text>
+          </View>
         <View style={styles.locationChip}>
           <Ionicons name="location" size={12} color={colors.primary.rust} />
-          <Text style={styles.locationChipText}>वाराणसी</Text>
+          <Text style={styles.locationChipText}>
+            {artisanProfile?.location?.split(',')[0] || 'Varanasi'}
+          </Text>
         </View>
       </View>
 
@@ -189,7 +198,7 @@ export default function HomeScreen({ navigation }) {
           <Text style={styles.tipTapNotice}>{t('tipTapNotice')}</Text>
         </View>
         <Text style={styles.tipPrimary}>
-          {currentLanguage === 'en' ? currentTip.english : currentTip.hindi}
+          {currentLanguage === 'en' ? currentTip.english : t(currentTip.tipKey)}
         </Text>
         {currentLanguage !== 'en' && (
           <Text style={styles.tipSecondary}>{currentTip.english}</Text>
@@ -258,6 +267,7 @@ export default function HomeScreen({ navigation }) {
       </View>
     </View>
   );
+};
 
   // Render Single Product Card
   const renderProductItem = ({ item }) => {
@@ -330,9 +340,9 @@ export default function HomeScreen({ navigation }) {
   const renderEmptyState = () => (
     <IllustratedEmptyState
       type="products"
-      titleHindi="अपनी पहली हस्तशिल्प कला जोड़ें"
+      titleHindi={t('emptyStateAddCraft')}
       titleEnglish="Add your first craft product to get started"
-      descHindi="शिल्पकला पर अपनी कला प्रदर्शित करें और देश-विदेश के खरीदारों से सीधे जुड़ें।"
+      descHindi={t('emptyStateAddCraftDesc')}
       descEnglish="Showcase your craft on ShilpKala and connect directly with verified buyers worldwide."
       buttonTitle={t('addProduct')}
       onButtonPress={handleAddProductPress}

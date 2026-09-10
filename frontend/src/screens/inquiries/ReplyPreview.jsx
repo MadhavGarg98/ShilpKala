@@ -40,7 +40,7 @@ export default function ReplyPreview({ route, navigation }) {
     t(inquiry?.productTitleKey) ||
     (currentLanguage === 'en'
       ? inquiry?.productTitleEnglish || inquiry?.productTitleHindi || 'Handcrafted Product'
-      : inquiry?.productTitleHindi || inquiry?.productTitleEnglish || 'हस्तशिल्प उत्पाद');
+      : inquiry?.productTitleHindi || inquiry?.productTitleEnglish || t('handcraftProduct'));
 
   // Professional English reply text
   const englishReplyBody =
@@ -89,7 +89,7 @@ export default function ReplyPreview({ route, navigation }) {
       {/* 1. FocusModeHeader */}
       <FocusModeHeader
         title={t('replyPreviewHeader')}
-        subtitle="सत्यापित अंग्रेजी प्रारूप · Verified Draft"
+        subtitle={t('verifiedDraftSub')}
         navigation={navigation}
       />
 
@@ -175,31 +175,33 @@ export default function ReplyPreview({ route, navigation }) {
           </View>
         </View>
 
-        {/* 6. Collapsible Original Hindi Section */}
-        <View style={styles.accordionContainer}>
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => setShowOriginalHindi(!showOriginalHindi)}
-            style={styles.accordionToggle}
-          >
-            <Ionicons
-              name={showOriginalHindi ? 'chevron-down' : 'chevron-forward'}
-              size={18}
-              color={colors.navy.deep}
-            />
-            <Text style={styles.accordionToggleText}>
-              {showOriginalHindi ? t('hideOriginalHindi') : t('viewOriginalHindi')}
-            </Text>
-          </TouchableOpacity>
-
-          {showOriginalHindi ? (
-            <View style={styles.accordionContent}>
-              <Text style={styles.originalHindiText}>
-                {transcribedHindi || inquiry?.messageHindi || 'हिंदी आवाज़ प्रारूप उपलब्ध नहीं है।'}
+        {/* 6. Collapsible Original Vernacular Section */}
+        {currentLanguage !== 'en' && (
+          <View style={styles.accordionContainer}>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => setShowOriginalHindi(!showOriginalHindi)}
+              style={styles.accordionToggle}
+            >
+              <Ionicons
+                name={showOriginalHindi ? 'chevron-down' : 'chevron-forward'}
+                size={18}
+                color={colors.navy.deep}
+              />
+              <Text style={styles.accordionToggleText}>
+                {showOriginalHindi ? t('hideOriginalHindi') : t('viewOriginalHindi')}
               </Text>
-            </View>
-          ) : null}
-        </View>
+            </TouchableOpacity>
+
+            {showOriginalHindi ? (
+              <View style={styles.accordionContent}>
+                <Text style={styles.originalHindiText}>
+                  {transcribedHindi || inquiry?.messageHindi || ''}
+                </Text>
+              </View>
+            ) : null}
+          </View>
+        )}
       </ScrollView>
 
       {/* 7. Bottom Docked Send Reply CTA */}

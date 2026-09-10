@@ -26,10 +26,14 @@ export default function ProfileSetup({ navigation }) {
   const currentArtisan = useAppStore((state) => state.artisanProfile);
   const { t, currentLanguage } = useTranslation();
 
-  const [name, setName] = useState('राम निवास (Ram Niwas)');
+  const [name, setName] = useState(
+    currentArtisan?.name && currentArtisan.name !== 'Ram Niwas' && currentArtisan.name !== 'राम निवास'
+      ? currentArtisan.name
+      : ''
+  );
   const [craftTypes, setCraftTypes] = useState([]);
   const [selectedCraftId, setSelectedCraftId] = useState('1');
-  const [location, setLocation] = useState('वाराणसी, उत्तर प्रदेश (Varanasi, UP)');
+  const [location, setLocation] = useState(t('defaultArtisanLocation'));
   const [hasGovtId, setHasGovtId] = useState(true);
   const [loading, setLoading] = useState(false);
   const [fetchingCrafts, setFetchingCrafts] = useState(true);
@@ -49,18 +53,23 @@ export default function ProfileSetup({ navigation }) {
   }, []);
 
   const handleVoiceTranscribeName = (transcribedName) => {
-    setName(transcribedName || 'राम निवास (Ram Niwas)');
+    setName(transcribedName || '');
   };
 
   const handleComplete = async () => {
     setLoading(true);
     const selectedCraft = craftTypes.find((c) => c.id === selectedCraftId);
+    const finalName = (name && name.trim().length > 0)
+      ? name.trim()
+      : (currentArtisan?.name && currentArtisan.name !== 'Ram Niwas' && currentArtisan.name !== 'राम निवास'
+          ? currentArtisan.name
+          : t('defaultArtisanName'));
 
     await updateProfile({
-      name,
+      name: finalName,
       craftType: selectedCraft
         ? (t(selectedCraft.labelKey) || `${selectedCraft.labelHindi} (${selectedCraft.labelEnglish})`)
-        : 'हथकरघा बुनाई (Handloom Weaving)',
+        : t('defaultCraftType'),
       location,
       artisanIdStatus: hasGovtId ? 'Verified' : 'Pending',
       isProfileComplete: true,
@@ -124,7 +133,7 @@ export default function ProfileSetup({ navigation }) {
             />
             <VoiceInputButton
               size={42}
-              mockText="राम निवास (Ram Niwas)"
+              mockText={t('voiceNameMockText')}
               onTranscribed={handleVoiceTranscribeName}
             />
           </View>

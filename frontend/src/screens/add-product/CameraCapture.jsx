@@ -157,7 +157,7 @@ export default function CameraCapture({ navigation }) {
               torch ? styles.textAmber : styles.textNavy,
             ]}
           >
-            {torch ? 'Flash Torch: ON' : (currentLanguage === 'hi' ? 'शिल्प फ़ोटो मोड' : 'Craft Photo Mode')}
+            {torch ? 'Flash Torch: ON' : t('craftPhotoMode')}
           </Text>
         </TouchableOpacity>
 

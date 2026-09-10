@@ -37,12 +37,12 @@ export default function BuyerPreview({ route, navigation, onClose, productData, 
     t(effectiveProduct.titleKey) ||
     (currentLanguage === 'en'
       ? effectiveProduct.titleEnglish || effectiveProduct.title || 'Handcrafted Artisan Craft'
-      : effectiveProduct.titleHindi || effectiveProduct.title || 'हस्तनिर्मित शिल्प');
+      : effectiveProduct.titleHindi || effectiveProduct.title || t('product.p1.title'));
   const description =
     t(effectiveProduct.descriptionKey) ||
     (currentLanguage === 'en'
       ? effectiveProduct.descriptionEnglish || effectiveProduct.description || 'Authentic handcrafted heritage item made directly by master artisans with zero middlemen.'
-      : effectiveProduct.descriptionHindi || effectiveProduct.description || 'मास्टर कारीगरों द्वारा बिना किसी बिचौलिए के सीधे बनाया गया प्रामाणिक हस्तशिल्प।');
+      : effectiveProduct.descriptionHindi || effectiveProduct.description || t('product.p1.description'));
 
   const handleContactArtisan = () => {
     // 1. Create realistic mock inquiry referencing this exact product in Zustand store
@@ -59,20 +59,20 @@ export default function BuyerPreview({ route, navigation, onClose, productData, 
       buyerName: 'Sophie Laurent',
       buyerCompany: "Galerie d'Artisan, Paris",
       buyerAvatar: require('../../../assets/images/avatars/elena.jpg'),
-      timestamp: 'अभी-अभी · Just now',
+      timestamp: t('justNow'),
       status: 'unread',
       messageOriginal: `Hello! I discovered your newly published ${effectiveProduct.titleEnglish || title} on ShilpKala and would love to inquire about procuring 15 pieces for our boutique in Paris. Could you provide wholesale lead time and pricing?`,
-      messageHindi: `नमस्ते! मैंने शिल्पकला पर आपका नया प्रकाशित उत्पाद देखा और हम अपने पेरिस बुटीक के लिए 15 पीस मंगवाने के बारे में पूछताछ करना चाहते हैं। क्या आप थोक समय और मूल्य विवरण साझा कर सकते हैं?`,
+      messageHindi: currentLanguage === 'en' ? '' : t('buyerInquiryMessageHindi'),
       isBulk: true,
       bulkQuantity: 15,
       bulkEstimatedValue: price * 15,
       isGiQuery: false,
-      tagHindi: 'थोक पूछताछ',
+      tagHindi: t('bulkInquiryTag'),
       tagEnglish: 'Bulk Inquiry',
       suggestedReplies: [
-        'हाँ, 15 पीस तैयार कर सकते हैं (Yes, can prepare 15 pieces)',
-        'पेरिस डिलीवरी 20 दिनों में संभव (Paris shipping in 20 days)',
-        'थोक छूट के साथ विशेष दर (Special wholesale discounted rate)',
+        t('replyPrepare15'),
+        t('replyParisShipping'),
+        t('replyWholesaleDiscount'),
       ],
       mockEnglishReply: `Dear Sophie,\n\nThank you for your inquiry from Galerie d'Artisan, Paris. We can handcraft and ship **15 pieces** of the ${effectiveProduct.titleEnglish || title}.\n\nFor 15 units, our wholesale timeline is **20 business days** with authentic artisan mark and export packaging.\n\nWarm regards,\n${artisanProfile?.name || 'Ram Niwas'}\n${artisanProfile?.craftType || 'Master Artisan'}`,
     };
@@ -82,8 +82,8 @@ export default function BuyerPreview({ route, navigation, onClose, productData, 
 
     // 2. Realistic Toast / Alert
     Alert.alert(
-      t('contactArtisan'),
-      `${t('buyerContactNotice')}\n\n✨ ${t('buyerInquiryCreated')}`,
+      t('buyerInquiryCreated'),
+      t('inquiryBanner'),
       [
         {
           text: 'OK',
@@ -112,7 +112,7 @@ export default function BuyerPreview({ route, navigation, onClose, productData, 
       {/* 1. FocusModeHeader */}
       <FocusModeHeader
         title={t('previewAsBuyer')}
-        subtitle="वैश्विक खरीदार दृश्य · International Buyer View"
+        subtitle={t('internationalBuyerView')}
         onBack={handleBack}
         navigation={navigation}
       />
