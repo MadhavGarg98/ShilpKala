@@ -1,6 +1,7 @@
 import os
 import shutil
 import logging
+import re
 from pathlib import Path
 from typing import BinaryIO, Union
 from app.config import settings
@@ -18,9 +19,23 @@ class StorageService:
 
     def __init__(self, base_dir: str = None, base_url: str = None):
         self.base_dir = Path(base_dir or settings.UPLOAD_DIR)
+        self._base_dir_resolved = self.base_dir.resolve()
         self.base_url = (base_url or settings.BASE_URL).rstrip("/")
         self.bucket = settings.CLOUD_STORAGE_BUCKET
         self.base_dir.mkdir(parents=True, exist_ok=True)
+
+    def _resolve_storage_path(self, key: str) -> Path:
+        clean_key = key.lstrip("/\\").replace("\\", "/")
+        if not clean_key:
+            raise ValueError("Invalid storage key path.")
+        parts = clean_key.split("/")
+        if any(part in {"", ".", ".."} or not re.fullmatch(r"[A-Za-z0-9._-]+", part) for part in parts):
+            raise ValueError("Invalid storage key path.")
+        # lgtm[py/path-injection] -- clean_key is validated and path is constrained to base_dir.
+        target_path = (self.base_dir / clean_key).resolve()
+        if target_path != self._base_dir_resolved and self._base_dir_resolved not in target_path.parents:
+            raise ValueError("Invalid storage key path.")
+        return target_path
 
     def upload(
         self,
@@ -41,14 +56,16 @@ class StorageService:
         """
         # Normalize key
         clean_key = key.lstrip("/\\")
-        target_path = self.base_dir / clean_key
+        target_path = self._resolve_storage_path(clean_key)
         target_path.parent.mkdir(parents=True, exist_ok=True)
 
         if isinstance(file_obj, bytes):
+            # lgtm[py/path-injection] -- target_path is normalized and constrained in _resolve_storage_path.
             with open(target_path, "wb") as f:
                 f.write(file_obj)
         else:
             file_obj.seek(0)
+            # lgtm[py/path-injection] -- target_path is normalized and constrained in _resolve_storage_path.
             with open(target_path, "wb") as f:
                 shutil.copyfileobj(file_obj, f)
 
@@ -60,7 +77,7 @@ class StorageService:
         Boto3-compatible upload_file method.
         """
         clean_key = key.lstrip("/\\")
-        target_path = self.base_dir / clean_key
+        target_path = self._resolve_storage_path(clean_key)
         target_path.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source_path, target_path)
         return self.get_url(clean_key)
@@ -77,14 +94,14 @@ class StorageService:
         Returns absolute local filesystem path for the given key.
         """
         clean_key = key.lstrip("/\\")
-        return self.base_dir / clean_key
+        return self._resolve_storage_path(clean_key)
 
     def delete(self, key: str) -> bool:
         """
         Deletes an object by key.
         """
         clean_key = key.lstrip("/\\")
-        target_path = self.base_dir / clean_key
+        target_path = self._resolve_storage_path(clean_key)
         if target_path.exists():
             target_path.unlink()
             return True
