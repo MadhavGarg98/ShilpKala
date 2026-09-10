@@ -16,6 +16,7 @@ import FocusModeHeader from '../../components/FocusModeHeader';
 import VoiceInputButton from '../../components/VoiceInputButton';
 import PrimaryButton from '../../components/PrimaryButton';
 import { useTranslation } from '../../i18n';
+import { resolveImageSource } from '../../utils/imageUtils';
 
 export default function VoiceReply({ route, navigation }) {
   const { inquiry, selectedReply } = route?.params || {};
@@ -91,7 +92,7 @@ export default function VoiceReply({ route, navigation }) {
         {/* 2. Small Context Card */}
         <View style={styles.contextCard}>
           <Image
-            source={{ uri: inquiry?.buyerAvatar }}
+            source={resolveImageSource(inquiry?.buyerAvatar)}
             style={styles.buyerAvatar}
           />
           <View style={styles.contextMeta}>
@@ -102,7 +103,7 @@ export default function VoiceReply({ route, navigation }) {
           </View>
           <View style={styles.productMiniTag}>
             <Image
-              source={{ uri: inquiry?.productImageUrl }}
+              source={resolveImageSource(inquiry?.productImageUrl || inquiry?.productImage)}
               style={styles.productMiniImage}
             />
             <Text style={styles.productMiniPrice}>

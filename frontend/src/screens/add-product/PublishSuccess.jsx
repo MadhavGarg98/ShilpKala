@@ -18,6 +18,7 @@ import SecondaryButton from '../../components/SecondaryButton';
 import BuyerPreview from './BuyerPreview';
 import { useAppStore } from '../../store/useAppStore';
 import { useTranslation } from '../../i18n';
+import { resolveImageSource } from '../../utils/imageUtils';
 
 export default function PublishSuccess({ route, navigation }) {
   const { imageUri, productData } = route?.params || {};
@@ -42,7 +43,7 @@ export default function PublishSuccess({ route, navigation }) {
       price: productData?.price || 6400,
       imageUrl:
         imageUri ||
-        'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
+        require('../../../assets/images/products/banarasi-saree.jpg'),
       status: 'live',
       views: 0,
       inquiries: 0,
@@ -168,18 +169,17 @@ export default function PublishSuccess({ route, navigation }) {
           ]}
         >
           <Image
-            source={{
-              uri:
-                imageUri ||
-                'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
-            }}
+            source={resolveImageSource(
+              imageUri || require('../../../assets/images/products/banarasi-saree.jpg')
+            )}
             style={styles.previewImage}
           />
           <View style={styles.previewInfo}>
             <Text style={styles.previewTitle} numberOfLines={2}>
-              {currentLanguage === 'en'
-                ? productData?.titleEnglish || productData?.title || 'Handwoven Saree'
-                : productData?.titleHindi || productData?.title || 'हाथ से बुनी साड़ी'}
+              {t(productData?.titleKey) ||
+                (currentLanguage === 'en'
+                  ? productData?.titleEnglish || productData?.title || 'Handwoven Saree'
+                  : productData?.titleHindi || productData?.title || 'हाथ से बुनी साड़ी')}
             </Text>
             <Text style={styles.previewPrice}>
               ₹{(productData?.price || 6400).toLocaleString('en-IN')}

@@ -18,6 +18,7 @@ import IllustratedEmptyState from '../../components/IllustratedEmptyState';
 import { getProducts } from '../../services/products';
 import { useAppStore } from '../../store/useAppStore';
 import { useTranslation } from '../../i18n';
+import { resolveImageSource } from '../../utils/imageUtils';
 
 const ARTISAN_TIPS = [
   {
@@ -264,7 +265,7 @@ export default function HomeScreen({ navigation }) {
 
     return (
       <View style={styles.productCard}>
-        <Image source={{ uri: item.imageUrl || item.image }} style={styles.productImage} />
+        <Image source={resolveImageSource(item.imageUrl || item.image)} style={styles.productImage} />
 
         <View style={styles.productDetails}>
           {/* Top badges */}
@@ -293,9 +294,9 @@ export default function HomeScreen({ navigation }) {
             )}
           </View>
 
-          {/* Bilingual Title */}
+          {/* Multilingual Title */}
           <Text style={styles.productPrimaryTitle} numberOfLines={1}>
-            {currentLanguage === 'en' ? item.titleEnglish : item.titleHindi}
+            {t(item.titleKey) || (currentLanguage === 'en' ? item.titleEnglish : item.titleHindi)}
           </Text>
           {currentLanguage !== 'en' && (
             <Text style={styles.productSecondaryTitle} numberOfLines={1}>

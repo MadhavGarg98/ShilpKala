@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   SafeAreaView,
   View,
@@ -16,48 +16,91 @@ import { typography } from '../../theme/typography';
 import PrimaryButton from '../../components/PrimaryButton';
 import StepFlowHeader from '../../components/StepFlowHeader';
 import VoiceInputButton from '../../components/VoiceInputButton';
-import { getMarketComparison } from '../../services/pricing';
+import { suggestPricing, getMarketComparison } from '../../services/pricing';
 import { useTranslation } from '../../i18n';
+import { resolveImageSource } from '../../utils/imageUtils';
 
 export default function SmartPricing({ route, navigation }) {
   const { imageUri, transcript, productData } = route?.params || {};
   const { t, currentLanguage } = useTranslation();
 
-  const minSuggested = productData?.suggestedPriceMin || 5500;
-  const maxSuggested = productData?.suggestedPriceMax || 7200;
-  const recommendedPrice = Math.round((minSuggested + maxSuggested) / 200) * 100; // e.g. 6400 or 6500
+  const isGiCertified = Boolean(productData?.isGiMatch);
+  const craftName = productData?.craftType || 'Handloom Weaving';
 
-  const [finalPrice, setFinalPrice] = useState(recommendedPrice);
-  const [materialCost, setMaterialCost] = useState('2200');
+  // Dynamic pricing state
+  const [materialCost, setMaterialCost] = useState(
+    productData?.materialCost ? String(productData.materialCost) : '2200'
+  );
+  const [minSuggested, setMinSuggested] = useState(productData?.suggestedPriceMin || 5300);
+  const [maxSuggested, setMaxSuggested] = useState(productData?.suggestedPriceMax || 7500);
+  const [finalPrice, setFinalPrice] = useState(6400);
+  const [pricingDetails, setPricingDetails] = useState(null);
+  const [loadingPricing, setLoadingPricing] = useState(false);
   const [marketBenchmarks, setMarketBenchmarks] = useState([]);
-  const [loadingBenchmarks, setLoadingBenchmarks] = useState(true);
+  const [errorMessage, setErrorMessage] = useState(null);
+  const [userHasManuallyTweakedPrice, setUserHasManuallyTweakedPrice] = useState(false);
+
+  const debounceTimerRef = useRef(null);
+
+  const fetchPricing = useCallback(async (costVal) => {
+    const numericCost = parseFloat(costVal) || 2200;
+    if (numericCost <= 0) return;
+
+    setLoadingPricing(true);
+    setErrorMessage(null);
+
+    try {
+      const data = await suggestPricing({
+        craftType: craftName,
+        materialCost: numericCost,
+        isGiMatch: isGiCertified,
+        productCategory: productData?.productCategory,
+      });
+
+      setMinSuggested(data.minPrice);
+      setMaxSuggested(data.maxPrice);
+      setPricingDetails(data);
+
+      if (!userHasManuallyTweakedPrice) {
+        setFinalPrice(data.recommendedPrice);
+      }
+
+      if (data.marketComparables && data.marketComparables.length > 0) {
+        setMarketBenchmarks(data.marketComparables);
+      }
+    } catch (err) {
+      console.warn('[SmartPricing] Pricing calculation notice:', err);
+      setErrorMessage(err.message || 'Pricing calculation error');
+    } finally {
+      setLoadingPricing(false);
+    }
+  }, [craftName, isGiCertified, productData, userHasManuallyTweakedPrice]);
 
   useEffect(() => {
-    async function loadBenchmarks() {
-      try {
-        const data = await getMarketComparison(productData?.craftTypeId || '1');
-        setMarketBenchmarks(data);
-      } catch (err) {
-        console.error('Error loading pricing benchmarks', err);
-      } finally {
-        setLoadingBenchmarks(false);
-      }
-    }
+    // Initial fetch on mount or when GI status changes
+    fetchPricing(materialCost);
+  }, [isGiCertified]);
 
-    loadBenchmarks();
-  }, [productData]);
+  const handleCostChange = (rawText) => {
+    const sanitized = rawText.replace(/[^0-9]/g, '');
+    setMaterialCost(sanitized);
+
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    debounceTimerRef.current = setTimeout(() => {
+      fetchPricing(sanitized || '2200');
+    }, 450);
+  };
 
   const handleAdjustPrice = (delta) => {
+    setUserHasManuallyTweakedPrice(true);
     setFinalPrice((prev) => Math.max(100, prev + delta));
   };
 
   const handleVoiceCostInput = (spokenCost) => {
     const digits = spokenCost.replace(/[^0-9]/g, '');
-    if (digits) {
-      setMaterialCost(digits);
-    } else {
-      setMaterialCost('2200');
-    }
+    const finalVal = digits || '2200';
+    setMaterialCost(finalVal);
+    fetchPricing(finalVal);
   };
 
   const handleContinue = () => {
@@ -68,6 +111,9 @@ export default function SmartPricing({ route, navigation }) {
         ...productData,
         price: finalPrice,
         materialCost: parseInt(materialCost, 10) || 2200,
+        suggestedPriceMin: minSuggested,
+        suggestedPriceMax: maxSuggested,
+        pricingMethod: pricingDetails?.method || 'rules_based_heuristic_v1',
       },
     });
   };
@@ -91,7 +137,7 @@ export default function SmartPricing({ route, navigation }) {
             {t('smartPricingTitle')}
           </Text>
           <Text style={styles.screenHeadingSecondary}>
-            Fair Heritage Pricing Engine • Powered by Market Intelligence
+            Fair Heritage Pricing Engine • Rules-Based Heuristic v1
           </Text>
         </View>
 
@@ -99,11 +145,21 @@ export default function SmartPricing({ route, navigation }) {
         <View style={styles.rangeCard}>
           <View style={styles.rangeHeader}>
             <View style={styles.sparkleIconWrap}>
-              <Ionicons name="sparkles" size={16} color={colors.surface.white} />
+              {loadingPricing ? (
+                <ActivityIndicator size="small" color={colors.surface.white} />
+              ) : (
+                <Ionicons name="sparkles" size={16} color={colors.surface.white} />
+              )}
             </View>
             <Text style={styles.rangeCardLabel}>
               {t('aiSuggestedRange')}
             </Text>
+            {pricingDetails?.giPremiumPct > 0 && (
+              <View style={styles.giBadgePill}>
+                <Ionicons name="ribbon" size={12} color="#8A600B" />
+                <Text style={styles.giBadgeText}>+30% GI Premium</Text>
+              </View>
+            )}
           </View>
 
           <View style={styles.rangeNumbersRow}>
@@ -111,10 +167,21 @@ export default function SmartPricing({ route, navigation }) {
               ₹{minSuggested.toLocaleString('en-IN')} – ₹{maxSuggested.toLocaleString('en-IN')}
             </Text>
           </View>
+
           <Text style={styles.rangeSubtext}>
-            शुद्ध रेशम, हाथ की बुनाई और जीआई प्रमाणन के आधार पर गणना की गई
+            {pricingDetails?.citation || 'वस्त्र मंत्रालय लागत दिशा-निर्देशों एवं कारीगर मजदूरी मानकों पर आधारित'}
           </Text>
         </View>
+
+        {/* Error / Offline Notice */}
+        {errorMessage && (
+          <View style={styles.errorNotice}>
+            <Ionicons name="information-circle" size={16} color={colors.primary.rust} />
+            <Text style={styles.errorNoticeText}>
+              स्थानीय लागत मॉडल सक्रिय है • Running on local transparent heuristic
+            </Text>
+          </View>
+        )}
 
         {/* 2. PRIMARY CONTROL: Large + / - Price Stepper */}
         <View style={styles.stepperControlCard}>
@@ -187,15 +254,20 @@ export default function SmartPricing({ route, navigation }) {
 
         {/* 3. Material Cost Input with VoiceInputButton */}
         <View style={styles.costCard}>
-          <Text style={styles.costCardLabel}>
-            {t('materialCostLabel')}
-          </Text>
+          <View style={styles.costLabelRow}>
+            <Text style={styles.costCardLabel}>
+              {t('materialCostLabel')}
+            </Text>
+            {loadingPricing && (
+              <ActivityIndicator size="small" color={colors.primary.rust} />
+            )}
+          </View>
           <View style={styles.costInputRow}>
             <Text style={styles.costCurrency}>₹</Text>
             <TextInput
               style={styles.costTextInput}
               value={materialCost}
-              onChangeText={(txt) => setMaterialCost(txt.replace(/[^0-9]/g, ''))}
+              onChangeText={handleCostChange}
               keyboardType="number-pad"
               placeholder={t('materialCostPlaceholder')}
               placeholderTextColor={colors.text.muted}
@@ -207,31 +279,46 @@ export default function SmartPricing({ route, navigation }) {
             />
           </View>
           <Text style={styles.costHint}>
-            सामग्री लागत दर्ज करने के लिए माइक पर टैप करें • Tap mic to speak
+            सामग्री लागत बदलते ही मूल्य सीमा स्वचालित रूप से अपडेट होती है • Auto-calculates as you type or speak
           </Text>
         </View>
 
-        {/* 4. Market Comparison Benchmarks */}
+        {/* 4. Transparency & Methodology Notice */}
+        <View style={styles.transparencyCard}>
+          <Ionicons name="document-text-outline" size={18} color={colors.navy.deep} />
+          <View style={styles.transparencyCol}>
+            <Text style={styles.transparencyTitle}>
+              पारदर्शिता अनुबंध • Honesty Disclosure
+            </Text>
+            <Text style={styles.transparencyText}>
+              {pricingDetails?.disclaimer ||
+                'यह अनुमान वस्त्र मंत्रालय एवं निष्पक्ष व्यापार दिशानिर्देशों (लागत × 2.4-3.4) एवं जीआई प्रमाणन प्रीमियम (+30%) पर आधारित नियमों द्वारा निकाला गया है। यह कोई गुप्त या बंद एल्गोरिदम नहीं है।'}
+            </Text>
+          </View>
+        </View>
+
+        {/* 5. Market Comparison Benchmarks */}
         <View style={styles.benchmarkSection}>
           <Text style={styles.benchmarkSectionTitle}>
             {t('marketComparisonTitle')}
           </Text>
 
-          {loadingBenchmarks ? (
-            <ActivityIndicator color={colors.primary.rust} style={{ padding: 12 }} />
-          ) : (
-            <View style={styles.benchmarkRow}>
-              {marketBenchmarks.map((item, idx) => (
-                <View key={item.id || idx} style={styles.benchmarkCard}>
-                  <Image source={{ uri: item.imageUrl }} style={styles.benchmarkImage} />
-                  <Text style={styles.benchmarkPrice}>
-                    ₹{item.price.toLocaleString('en-IN')}
-                  </Text>
-                  <Text style={styles.benchmarkStatus}>बाज़ार मूल्य</Text>
-                </View>
-              ))}
-            </View>
-          )}
+          <View style={styles.benchmarkRow}>
+            {marketBenchmarks.slice(0, 3).map((item, idx) => (
+              <View key={item.id || `comp-${idx}`} style={styles.benchmarkCard}>
+                <Image
+                  source={resolveImageSource(item.imageUrl || require('../../../assets/images/products/banarasi-saree.jpg'))}
+                  style={styles.benchmarkImage}
+                />
+                <Text style={styles.benchmarkPrice}>
+                  ₹{(item.price || 4800).toLocaleString('en-IN')}
+                </Text>
+                <Text style={styles.benchmarkStatus} numberOfLines={1}>
+                  {item.source_label || item.sourceLabel || 'सहकारी संदर्भ'}
+                </Text>
+              </View>
+            ))}
+          </View>
         </View>
       </ScrollView>
 
@@ -297,6 +384,21 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#8A600B',
   },
+  giBadgePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FDECC8',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    marginLeft: 'auto',
+  },
+  giBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#8A600B',
+  },
   rangeNumbersRow: {
     marginVertical: 4,
   },
@@ -310,6 +412,20 @@ const styles = StyleSheet.create({
     color: '#7C663A',
     marginTop: 4,
     lineHeight: 16,
+  },
+  errorNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#FFF1E8',
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 14,
+  },
+  errorNoticeText: {
+    fontSize: 11,
+    color: colors.primary.rust,
+    fontWeight: '600',
   },
   stepperControlCard: {
     backgroundColor: colors.surface.white,
@@ -411,11 +527,16 @@ const styles = StyleSheet.create({
     borderColor: '#EFEAE2',
     marginBottom: 16,
   },
+  costLabelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   costCardLabel: {
     fontSize: 12,
     fontWeight: '700',
     color: colors.navy.deep,
-    marginBottom: 8,
   },
   costInputRow: {
     flexDirection: 'row',
@@ -445,6 +566,30 @@ const styles = StyleSheet.create({
     color: colors.text.muted,
     marginTop: 6,
     fontStyle: 'italic',
+  },
+  transparencyCard: {
+    flexDirection: 'row',
+    gap: 10,
+    backgroundColor: '#F7F5F0',
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E8E3DA',
+    marginBottom: 16,
+  },
+  transparencyCol: {
+    flex: 1,
+  },
+  transparencyTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.navy.deep,
+    marginBottom: 4,
+  },
+  transparencyText: {
+    fontSize: 11,
+    color: '#5C5449',
+    lineHeight: 16,
   },
   benchmarkSection: {
     marginBottom: 16,
@@ -481,8 +626,10 @@ const styles = StyleSheet.create({
     color: colors.navy.deep,
   },
   benchmarkStatus: {
-    fontSize: 10,
+    fontSize: 9,
     color: colors.text.muted,
+    textAlign: 'center',
+    marginTop: 2,
   },
   bottomBar: {
     paddingHorizontal: 16,

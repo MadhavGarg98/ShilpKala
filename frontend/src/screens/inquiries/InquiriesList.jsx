@@ -18,6 +18,7 @@ import IllustratedEmptyState from '../../components/IllustratedEmptyState';
 import PrimaryButton from '../../components/PrimaryButton';
 import { useAppStore } from '../../store/useAppStore';
 import { useTranslation } from '../../i18n';
+import { resolveImageSource } from '../../utils/imageUtils';
 
 const FILTERS = ['all', 'unread', 'bulk'];
 
@@ -107,7 +108,7 @@ export default function InquiriesList({ navigation }) {
         <View style={styles.cardHeader}>
           <View style={styles.buyerRow}>
             <Image
-              source={{ uri: item.buyerAvatar }}
+              source={resolveImageSource(item.buyerAvatar)}
               style={styles.avatar}
             />
             <View style={styles.buyerMeta}>
@@ -136,14 +137,15 @@ export default function InquiriesList({ navigation }) {
         {/* Product Context Strip */}
         <View style={styles.productStrip}>
           <Image
-            source={{ uri: item.productImageUrl }}
+            source={resolveImageSource(item.productImageUrl || item.productImage)}
             style={styles.productThumb}
           />
           <View style={styles.productInfo}>
             <Text style={styles.productTitle} numberOfLines={1}>
-              {currentLanguage === 'en'
-                ? item.productTitleEnglish || item.productTitleHindi
-                : item.productTitleHindi || item.productTitleEnglish}
+              {t(item.productTitleKey) ||
+                (currentLanguage === 'en'
+                  ? item.productTitleEnglish || item.productTitleHindi
+                  : item.productTitleHindi || item.productTitleEnglish)}
             </Text>
             <Text style={styles.productPrice}>
               ₹{(item.productPrice || 0).toLocaleString('en-IN')}
@@ -157,10 +159,10 @@ export default function InquiriesList({ navigation }) {
           )}
         </View>
 
-        {/* Message Preview (Bilingual) */}
+        {/* Message Preview */}
         <View style={styles.messageBox}>
           <Text style={styles.messageHindi} numberOfLines={2}>
-            {item.messageHindi}
+            {t(item.messageKey) || item.messageHindi}
           </Text>
           <Text style={styles.messageEnglish} numberOfLines={1}>
             "{item.messageOriginal}"

@@ -1,7 +1,34 @@
+// Unsplash sources:
+// Saree: https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80
+// Saree Before: https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=80
+const sareeImg = require('../../assets/images/products/banarasi-saree.jpg');
+const sareeBeforeImg = require('../../assets/images/products/saree-before.jpg');
+
+// Clay Pot: https://images.unsplash.com/photo-1610701596007-11502861dcfa?auto=format&fit=crop&w=800&q=80
+// Pot Before: https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&w=800&q=80
+const potImg = require('../../assets/images/products/terracotta-pot.jpg');
+const potBeforeImg = require('../../assets/images/products/pottery-before.jpg');
+
+// Bedspread: https://images.unsplash.com/photo-1606744837616-56c9a5c6a6eb?auto=format&fit=crop&w=800&q=80
+const bedspreadImg = require('../../assets/images/products/blockprint-bedspread.jpg');
+
+// Wood Elephant: https://images.unsplash.com/photo-1544644558-52264bd9d554?auto=format&fit=crop&w=800&q=80
+const elephantImg = require('../../assets/images/products/wood-elephant.jpg');
+
+// Cushion Cover: https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?auto=format&fit=crop&w=800&q=80
+const cushionImg = require('../../assets/images/products/zardozi-cushion.jpg');
+
+// Brass Diya: https://images.unsplash.com/photo-1582738411706-bfc8e691d1c2?auto=format&fit=crop&w=800&q=80
+const diyaImg = require('../../assets/images/products/brass-diya.jpg');
+
 export const mockProducts = [
   {
     id: 'p1',
     craftTypeId: '1',
+    titleKey: 'product.p1.title',
+    descriptionKey: 'product.p1.description',
+    giNameKey: 'craft.handloom.giName',
+    heritageStoryKey: 'craft.handloom.heritageStory',
     titleHindi: 'बनारसी शुद्ध रेशम साड़ी',
     titleEnglish: 'Banarasi Pure Silk Saree',
     price: 6500,
@@ -14,10 +41,10 @@ export const mockProducts = [
     heritageStoryEnglish: 'A 500-year-old weaving tradition utilizing pure mulberry silk and authentic zari in the historic kadhua technique of Varanasi.',
     descriptionHindi: 'पारंपरिक ज़री बूटा और हाथ से बुनी शुद्ध बनारसी कातून रेशम साड़ी।',
     descriptionEnglish: 'Handwoven pure Banarasi katan silk saree with traditional zari motifs and rich pallu.',
-    imageUrl: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
-    image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
-    beforeImageUrl: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=80',
-    afterImageUrl: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
+    imageUrl: sareeImg,
+    image: sareeImg,
+    beforeImageUrl: sareeBeforeImg,
+    afterImageUrl: sareeImg,
     inquiryCount: 4,
     viewsCount: 68,
     keywords: ['Silk', 'Wedding', 'Handloom', 'Banarasi'],
@@ -25,6 +52,10 @@ export const mockProducts = [
   {
     id: 'p2',
     craftTypeId: '2',
+    titleKey: 'product.p2.title',
+    descriptionKey: 'product.p2.description',
+    giNameKey: 'craft.clay.giName',
+    heritageStoryKey: 'craft.clay.heritageStory',
     titleHindi: 'पारंपरिक मिट्टी का सुराही बर्तन',
     titleEnglish: 'Terracotta Water Pot (Surahi)',
     price: 450,
@@ -37,10 +68,10 @@ export const mockProducts = [
     heritageStoryEnglish: 'Handcrafted centuries-old terracotta tradition shaped from natural riverbed alluvial clay without synthetic casts.',
     descriptionHindi: 'प्राकृतिक ठंडे पानी के लिए लाल मिट्टी से बना पारंपरिक नक्काशीदार घड़ा।',
     descriptionEnglish: 'Traditional red clay pot with natural cooling and artisan floral engravings.',
-    imageUrl: 'https://images.unsplash.com/photo-1610701596007-11502861dcfa?auto=format&fit=crop&w=800&q=80',
-    image: 'https://images.unsplash.com/photo-1610701596007-11502861dcfa?auto=format&fit=crop&w=800&q=80',
-    beforeImageUrl: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&w=800&q=80',
-    afterImageUrl: 'https://images.unsplash.com/photo-1610701596007-11502861dcfa?auto=format&fit=crop&w=800&q=80',
+    imageUrl: potImg,
+    image: potImg,
+    beforeImageUrl: potBeforeImg,
+    afterImageUrl: potImg,
     inquiryCount: 2,
     viewsCount: 34,
     keywords: ['Clay', 'Terracotta', 'Home Decor', 'Eco-friendly'],
@@ -48,6 +79,10 @@ export const mockProducts = [
   {
     id: 'p3',
     craftTypeId: '3',
+    titleKey: 'product.p3.title',
+    descriptionKey: 'product.p3.description',
+    giNameKey: 'craft.blockprint.giName',
+    heritageStoryKey: 'craft.blockprint.heritageStory',
     titleHindi: 'हैंड ब्लॉक प्रिंटेड सूती चादर',
     titleEnglish: 'Hand Block Print Cotton Bedspread',
     price: 1850,
@@ -60,8 +95,8 @@ export const mockProducts = [
     heritageStoryEnglish: 'Hand-pressed delicate botanical motifs stamped with hand-carved teakwood blocks using pure herbal dyes.',
     descriptionHindi: 'सांगानेरी प्राकृतिक रंगों से हाथ से छपी १००% शुद्ध सूती बेडशीट।',
     descriptionEnglish: '100% pure cotton king-size bedspread hand-printed with natural herbal dyes.',
-    imageUrl: 'https://images.unsplash.com/photo-1606744837616-56c9a5c6a6eb?auto=format&fit=crop&w=800&q=80',
-    image: 'https://images.unsplash.com/photo-1606744837616-56c9a5c6a6eb?auto=format&fit=crop&w=800&q=80',
+    imageUrl: bedspreadImg,
+    image: bedspreadImg,
     inquiryCount: 1,
     viewsCount: 45,
     keywords: ['Cotton', 'BlockPrint', 'Sanganeri', 'Textiles'],
@@ -69,6 +104,10 @@ export const mockProducts = [
   {
     id: 'p4',
     craftTypeId: '4',
+    titleKey: 'product.p4.title',
+    descriptionKey: 'product.p4.description',
+    giNameKey: 'craft.wood.giName',
+    heritageStoryKey: 'craft.wood.heritageStory',
     titleHindi: 'शीशम की लकड़ी की नक्काशीदार हाथी मूर्ति',
     titleEnglish: 'Hand-Carved Sheesham Wood Elephant',
     price: 1200,
@@ -81,8 +120,8 @@ export const mockProducts = [
     heritageStoryEnglish: 'Intricate openwork floral carving sculpted on seasoned single-block sheesham rosewood.',
     descriptionHindi: 'एकल लकड़ी से तराशी गई जालीदार काम वाली शाही हाथी की मूर्ति।',
     descriptionEnglish: 'Intricately carved single-block rosewood elephant with jali artwork.',
-    imageUrl: 'https://images.unsplash.com/photo-1544644558-52264bd9d554?auto=format&fit=crop&w=800&q=80',
-    image: 'https://images.unsplash.com/photo-1544644558-52264bd9d554?auto=format&fit=crop&w=800&q=80',
+    imageUrl: elephantImg,
+    image: elephantImg,
     inquiryCount: 0,
     viewsCount: 0,
     keywords: ['Wood', 'HandCarved', 'Statue', 'Art'],
@@ -90,6 +129,10 @@ export const mockProducts = [
   {
     id: 'p5',
     craftTypeId: '5',
+    titleKey: 'product.p5.title',
+    descriptionKey: 'product.p5.description',
+    giNameKey: 'craft.zardozi.giName',
+    heritageStoryKey: 'craft.zardozi.heritageStory',
     titleHindi: 'जरदोजी कढ़ाई वाला मखमली कुशन कवर',
     titleEnglish: 'Zardozi Embroidered Velvet Cushion Cover',
     price: 950,
@@ -102,8 +145,8 @@ export const mockProducts = [
     heritageStoryEnglish: 'Imperial metallic gold and silver wire hand-embroidery sewn on rich velvet fabric.',
     descriptionHindi: 'शाही सुनहरी तारों और मोतियों से सजाया गया हाथ का जरदोजी काम।',
     descriptionEnglish: 'Royal velvet cushion cover embroidered with metallic gold threads and beads.',
-    imageUrl: 'https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?auto=format&fit=crop&w=800&q=80',
-    image: 'https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?auto=format&fit=crop&w=800&q=80',
+    imageUrl: cushionImg,
+    image: cushionImg,
     inquiryCount: 3,
     viewsCount: 52,
     keywords: ['Zardozi', 'Velvet', 'Embroidery', 'Luxury'],
@@ -111,6 +154,10 @@ export const mockProducts = [
   {
     id: 'p6',
     craftTypeId: '6',
+    titleKey: 'product.p6.title',
+    descriptionKey: 'product.p6.description',
+    giNameKey: 'craft.brass.giName',
+    heritageStoryKey: 'craft.brass.heritageStory',
     titleHindi: 'हस्तनिर्मित पीतल का मयूर दीया',
     titleEnglish: 'Handcrafted Brass Peacock Oil Lamp',
     price: 2400,
@@ -118,8 +165,8 @@ export const mockProducts = [
     isGiCertified: false,
     descriptionHindi: 'पारंपरिक मोराकृति वाला भारी पीतल का आरती दीपस्तंभ।',
     descriptionEnglish: 'Solid brass handcrafted oil lamp featuring peacock motif for rituals and decor.',
-    imageUrl: 'https://images.unsplash.com/photo-1582738411706-bfc8e691d1c2?auto=format&fit=crop&w=800&q=80',
-    image: 'https://images.unsplash.com/photo-1582738411706-bfc8e691d1c2?auto=format&fit=crop&w=800&q=80',
+    imageUrl: diyaImg,
+    image: diyaImg,
     inquiryCount: 0,
     viewsCount: 0,
     keywords: ['Brass', 'Metalcraft', 'Puja', 'Handmade'],

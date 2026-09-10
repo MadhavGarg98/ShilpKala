@@ -17,6 +17,7 @@ import PrimaryButton from '../../components/PrimaryButton';
 import StepFlowHeader from '../../components/StepFlowHeader';
 import { playTextToSpeech, stopTextToSpeech } from '../../services/audio';
 import { useTranslation } from '../../i18n';
+import { resolveImageSource } from '../../utils/imageUtils';
 
 export default function ReviewPublish({ route, navigation }) {
   const { imageUri, transcript, productData } = route?.params || {};
@@ -25,14 +26,16 @@ export default function ReviewPublish({ route, navigation }) {
   // Editable fields — seeded from AI-generated data
   const [editingField, setEditingField] = useState(null); // 'title' | 'description' | 'price' | null
   const [title, setTitle] = useState(
-    currentLanguage === 'en'
+    (productData?.titleKey ? t(productData.titleKey) : null) ||
+    (currentLanguage === 'en'
       ? productData?.titleEnglish || 'Handwoven Banarasi Silk Saree'
-      : productData?.titleHindi || 'हाथ से बुनी बनारसी रेशम साड़ी'
+      : productData?.titleHindi || 'हाथ से बुनी बनारसी रेशम साड़ी')
   );
   const [description, setDescription] = useState(
-    currentLanguage === 'en'
+    (productData?.descriptionKey ? t(productData.descriptionKey) : null) ||
+    (currentLanguage === 'en'
       ? productData?.descriptionEnglish || 'Pure katan silk saree with gold zari motifs.'
-      : productData?.descriptionHindi || 'शुद्ध कातून रेशम साड़ी, सोने की ज़री बूटे।'
+      : productData?.descriptionHindi || 'शुद्ध कातून रेशम साड़ी, सोने की ज़री बूटे।')
   );
   const [price, setPrice] = useState(String(productData?.price || 6400));
 
@@ -129,11 +132,9 @@ export default function ReviewPublish({ route, navigation }) {
           </View>
           <View style={styles.imageWrapper}>
             <Image
-              source={{
-                uri:
-                  imageUri ||
-                  'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
-              }}
+              source={resolveImageSource(
+                imageUri || require('../../../assets/images/products/banarasi-saree.jpg')
+              )}
               style={styles.productImage}
             />
             <View style={styles.enhancedChip}>

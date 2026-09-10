@@ -8,7 +8,11 @@
     "scheme": "shilpkala",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "infoPlist": {
+        "NSCameraUsageDescription": "शिल्पकला को आपके हस्तनिर्मित उत्पादों की स्पष्ट फोटो लेने और एआई स्टूडियो द्वारा सुधारने के लिए कैमरे की अनुमति आवश्यक है। / ShilpKala needs camera access to photograph your authentic handcrafted products for AI studio enhancement.",
+        "NSMicrophoneUsageDescription": "शिल्पकला को आपकी मातृभाषा में उत्पाद विवरण और खरीदारों के संदेशों का वॉयस जवाब रिकॉर्ड करने के लिए माइक्रोफ़ोन की आवश्यकता है। / ShilpKala needs microphone access to record artisan voice descriptions and reply to buyer inquiries."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -17,7 +21,11 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "output": "single",
@@ -30,6 +38,12 @@
           "backgroundColor": "#208AEF",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "शिल्पकला को आपके हस्तनिर्मित उत्पादों की फोटो लेने के लिए कैमरे की अनुमति चाहिए। / ShilpKala needs camera access to photograph your authentic handcrafted products."
         }
       ],
       "expo-audio",

@@ -16,6 +16,7 @@ import FocusModeHeader from '../../components/FocusModeHeader';
 import PrimaryButton from '../../components/PrimaryButton';
 import { useAppStore } from '../../store/useAppStore';
 import { useTranslation } from '../../i18n';
+import { resolveImageSource } from '../../utils/imageUtils';
 
 export default function BuyerPreview({ route, navigation, onClose, productData, imageUri }) {
   const params = route?.params || {};
@@ -24,7 +25,7 @@ export default function BuyerPreview({ route, navigation, onClose, productData, 
     imageUri ||
     params.imageUri ||
     effectiveProduct.imageUrl ||
-    'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80';
+    require('../../../assets/images/products/banarasi-saree.jpg');
 
   const { t, currentLanguage } = useTranslation();
   const addInquiry = useAppStore((state) => state.addInquiry);
@@ -33,19 +34,22 @@ export default function BuyerPreview({ route, navigation, onClose, productData, 
 
   const price = effectiveProduct.price || 6400;
   const title =
-    currentLanguage === 'en'
+    t(effectiveProduct.titleKey) ||
+    (currentLanguage === 'en'
       ? effectiveProduct.titleEnglish || effectiveProduct.title || 'Handcrafted Artisan Craft'
-      : effectiveProduct.titleHindi || effectiveProduct.title || 'हस्तनिर्मित शिल्प';
+      : effectiveProduct.titleHindi || effectiveProduct.title || 'हस्तनिर्मित शिल्प');
   const description =
-    currentLanguage === 'en'
+    t(effectiveProduct.descriptionKey) ||
+    (currentLanguage === 'en'
       ? effectiveProduct.descriptionEnglish || effectiveProduct.description || 'Authentic handcrafted heritage item made directly by master artisans with zero middlemen.'
-      : effectiveProduct.descriptionHindi || effectiveProduct.description || 'मास्टर कारीगरों द्वारा बिना किसी बिचौलिए के सीधे बनाया गया प्रामाणिक हस्तशिल्प।';
+      : effectiveProduct.descriptionHindi || effectiveProduct.description || 'मास्टर कारीगरों द्वारा बिना किसी बिचौलिए के सीधे बनाया गया प्रामाणिक हस्तशिल्प।');
 
   const handleContactArtisan = () => {
     // 1. Create realistic mock inquiry referencing this exact product in Zustand store
     const newInquiry = {
       id: `inq-${Date.now()}`,
       productId: effectiveProduct.id || 'p-new',
+      productTitleKey: effectiveProduct.titleKey,
       productTitleHindi: effectiveProduct.titleHindi || effectiveProduct.title || title,
       productTitleEnglish: effectiveProduct.titleEnglish || effectiveProduct.title || title,
       productPrice: price,
@@ -54,7 +58,7 @@ export default function BuyerPreview({ route, navigation, onClose, productData, 
       isGiCertified: effectiveProduct.isGiMatch || effectiveProduct.isGiCertified || true,
       buyerName: 'Sophie Laurent',
       buyerCompany: "Galerie d'Artisan, Paris",
-      buyerAvatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=300&q=80',
+      buyerAvatar: require('../../../assets/images/avatars/elena.jpg'),
       timestamp: 'अभी-अभी · Just now',
       status: 'unread',
       messageOriginal: `Hello! I discovered your newly published ${effectiveProduct.titleEnglish || title} on ShilpKala and would love to inquire about procuring 15 pieces for our boutique in Paris. Could you provide wholesale lead time and pricing?`,
@@ -125,7 +129,7 @@ export default function BuyerPreview({ route, navigation, onClose, productData, 
 
         {/* 3. Hero Product Image */}
         <View style={styles.heroImageWrapper}>
-          <Image source={{ uri: effectiveImageUri }} style={styles.heroImage} />
+          <Image source={resolveImageSource(effectiveImageUri)} style={styles.heroImage} />
           <View style={styles.liveTag}>
             <View style={styles.liveDot} />
             <Text style={styles.liveTagText}>LIVE STOREFRONT</Text>
@@ -165,11 +169,11 @@ export default function BuyerPreview({ route, navigation, onClose, productData, 
         {/* 5. Verified Artisan Strip */}
         <View style={styles.artisanCard}>
           <Image
-            source={{
-              uri:
-                artisanProfile?.profileImageUrl ||
-                'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=200&q=80',
-            }}
+            source={resolveImageSource(
+              artisanProfile?.profileImageUrl ||
+                artisanProfile?.image ||
+                require('../../../assets/images/avatars/ramniwas.jpg')
+            )}
             style={styles.artisanAvatar}
           />
           <View style={styles.artisanMeta}>

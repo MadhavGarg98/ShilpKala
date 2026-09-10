@@ -18,6 +18,7 @@ import AudioPlayerInline from '../../components/AudioPlayerInline';
 import PrimaryButton from '../../components/PrimaryButton';
 import { useAppStore } from '../../store/useAppStore';
 import { useTranslation } from '../../i18n';
+import { resolveImageSource } from '../../utils/imageUtils';
 
 export default function ReplyPreview({ route, navigation }) {
   const { inquiry, transcribedHindi } = route?.params || {};
@@ -36,9 +37,10 @@ export default function ReplyPreview({ route, navigation }) {
     .slice(0, 10)}.com`;
 
   const productTitle =
-    currentLanguage === 'en'
+    t(inquiry?.productTitleKey) ||
+    (currentLanguage === 'en'
       ? inquiry?.productTitleEnglish || inquiry?.productTitleHindi || 'Handcrafted Product'
-      : inquiry?.productTitleHindi || inquiry?.productTitleEnglish || 'हस्तशिल्प उत्पाद';
+      : inquiry?.productTitleHindi || inquiry?.productTitleEnglish || 'हस्तशिल्प उत्पाद');
 
   // Professional English reply text
   const englishReplyBody =
@@ -115,7 +117,7 @@ export default function ReplyPreview({ route, navigation }) {
         {/* 3. Product & Buyer Context Card Repeated */}
         <View style={styles.contextCard}>
           <Image
-            source={{ uri: inquiry?.buyerAvatar }}
+            source={resolveImageSource(inquiry?.buyerAvatar)}
             style={styles.avatar}
           />
           <View style={styles.contextCol}>
@@ -124,7 +126,7 @@ export default function ReplyPreview({ route, navigation }) {
           </View>
           <View style={styles.productPill}>
             <Image
-              source={{ uri: inquiry?.productImageUrl }}
+              source={resolveImageSource(inquiry?.productImageUrl || inquiry?.productImage)}
               style={styles.productThumb}
             />
             <Text style={styles.productPillPrice}>

@@ -6,6 +6,7 @@ import { typography } from '../theme/typography';
 import { useNavigation } from '@react-navigation/native';
 import { useAppStore } from '../store/useAppStore';
 import { useTranslation } from '../i18n';
+import { resolveImageSource } from '../utils/imageUtils';
 
 export default function TabRootHeader({
   txKey = 'brandName',
@@ -56,7 +57,7 @@ export default function TabRootHeader({
           >
             {artisanProfile?.profileImageUrl ? (
               <Image
-                source={{ uri: artisanProfile.profileImageUrl }}
+                source={resolveImageSource(artisanProfile.profileImageUrl || artisanProfile.image)}
                 style={styles.avatarImage}
               />
             ) : (

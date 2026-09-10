@@ -1,24 +1,55 @@
+// Unsplash avatar sources:
+// Elena: https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80
+const elenaAvatar = require('../../assets/images/avatars/elena.jpg');
+
+// David: https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80
+const davidAvatar = require('../../assets/images/avatars/david.jpg');
+
+// Radhika: https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80
+const radhikaAvatar = require('../../assets/images/avatars/radhika.jpg');
+
+// Marcus: https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80
+const marcusAvatar = require('../../assets/images/avatars/marcus.jpg');
+
+// Amina: https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=300&q=80
+const aminaAvatar = require('../../assets/images/avatars/amina.jpg');
+
+// Vikram: https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=300&q=80
+const vikramAvatar = require('../../assets/images/avatars/vikram.jpg');
+
+// Product images:
+const sareeImg = require('../../assets/images/products/banarasi-saree.jpg');
+const potImg = require('../../assets/images/products/terracotta-pot.jpg');
+const bedspreadImg = require('../../assets/images/products/blockprint-bedspread.jpg');
+const cushionImg = require('../../assets/images/products/zardozi-cushion.jpg');
+const diyaImg = require('../../assets/images/products/brass-diya.jpg');
+
 export const mockInquiries = [
   {
     id: 'inq-1',
     productId: 'p1',
+    productTitleKey: 'inquiry.inq1.productTitle',
     productTitleHindi: 'बनारसी शुद्ध रेशम साड़ी',
     productTitleEnglish: 'Banarasi Pure Silk Saree',
     productPrice: 6500,
-    productImageUrl: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
+    productImageUrl: sareeImg,
+    productImage: sareeImg,
     craftType: 'Handloom Weaving',
+    craftTypeKey: 'craft.handloom.label',
     isGiCertified: true,
     buyerName: 'Elena Rostova',
     buyerCompany: 'Studio Aethel, Berlin',
-    buyerAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+    buyerAvatar: elenaAvatar,
     timestamp: '15 मिनट पहले · 15m ago',
     status: 'unread', // unread | read | replied
     messageOriginal: 'Hello Ram Niwas ji. We are curating a festive Indian bridal showcase in Berlin. Can you supply 50 pieces of this Banarasi Katan Silk Saree? What would be the bulk wholesale timeline and pricing?',
+    messageKey: 'inquiry.inq1.message',
     messageHindi: 'नमस्ते राम निवास जी। हम बर्लिन में एक उत्सवकालीन भारतीय ब्राइडल शोकेस आयोजित कर रहे हैं। क्या आप इस बनारसी कातून सिल्क साड़ी के 50 पीस उपलब्ध करा सकते हैं? थोक मूल्य और डिलीवरी समय क्या होगा?',
     isBulk: true,
     bulkQuantity: 50,
     bulkEstimatedValue: 325000,
     isGiQuery: false,
+    tagKey: 'inquiry.inq1.tag',
     tagHindi: 'थोक पूछताछ',
     tagEnglish: 'Bulk Inquiry',
     suggestedReplies: [
@@ -32,21 +63,26 @@ export const mockInquiries = [
   {
     id: 'inq-2',
     productId: 'p1',
+    productTitleKey: 'inquiry.inq2.productTitle',
     productTitleHindi: 'बनारसी शुद्ध रेशम साड़ी',
     productTitleEnglish: 'Banarasi Pure Silk Saree',
     productPrice: 6500,
-    productImageUrl: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
+    productImageUrl: sareeImg,
+    productImage: sareeImg,
     craftType: 'Handloom Weaving',
+    craftTypeKey: 'craft.handloom.label',
     isGiCertified: true,
     buyerName: 'David Harrison',
     buyerCompany: 'Silk & Spice Imports, London',
-    buyerAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
+    buyerAvatar: davidAvatar,
     timestamp: '2 घंटे पहले · 2h ago',
     status: 'unread',
     messageOriginal: 'Greetings. Does each piece come with the official Geographical Indication (GI) certificate registry tag GI-IN-99? Our London retail customers strictly require verified provenance documentation before we stock.',
+    messageKey: 'inquiry.inq2.message',
     messageHindi: 'नमस्ते। क्या प्रत्येक साड़ी के साथ आधिकारिक जीआई (GI) प्रमाणन टैग GI-IN-99 मिलता है? लंदन में हमारे ग्राहकों को उत्पाद की प्रामाणिकता का आधिकारिक दस्तावेज चाहिए।',
     isBulk: false,
     isGiQuery: true,
+    tagKey: 'inquiry.inq2.tag',
     tagHindi: 'जीआई प्रमाणन',
     tagEnglish: 'GI Certificate',
     suggestedReplies: [
@@ -59,23 +95,28 @@ export const mockInquiries = [
   {
     id: 'inq-3',
     productId: 'p3',
+    productTitleKey: 'inquiry.inq3.productTitle',
     productTitleHindi: 'हैंड ब्लॉक प्रिंटेड सूती चादर',
     productTitleEnglish: 'Hand Block Print Cotton Bedspread',
     productPrice: 1850,
-    productImageUrl: 'https://images.unsplash.com/photo-1606744837616-56c9a5c6a6eb?auto=format&fit=crop&w=800&q=80',
+    productImageUrl: bedspreadImg,
+    productImage: bedspreadImg,
     craftType: 'Hand Block Print',
+    craftTypeKey: 'craft.blockprint.label',
     isGiCertified: true,
     buyerName: 'Radhika Singhal',
     buyerCompany: 'FabCraft Sourcing Network, New Delhi',
-    buyerAvatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80',
+    buyerAvatar: radhikaAvatar,
     timestamp: '1 दिन पहले · 1d ago',
     status: 'read',
     messageOriginal: 'We received the 10 sample bedspreads in our Delhi office yesterday! The indigo botanical prints and cotton finish are exceptional. We want to place an order for 100 sets for the upcoming Diwali collection.',
+    messageKey: 'inquiry.inq3.message',
     messageHindi: 'हमें कल दिल्ली कार्यालय में 10 नमूना चादरें मिल गईं! नील वनस्पति छपाई और सूती फिनिश बेहद शानदार है। हम आगामी दिवाली संग्रह के लिए 100 सेट का ऑर्डर देना चाहते हैं।',
     isBulk: true,
     bulkQuantity: 100,
     bulkEstimatedValue: 185000,
     isGiQuery: false,
+    tagKey: 'inquiry.inq3.tag',
     tagHindi: 'थोक पूछताछ',
     tagEnglish: 'Bulk Inquiry',
     suggestedReplies: [
@@ -88,21 +129,26 @@ export const mockInquiries = [
   {
     id: 'inq-4',
     productId: 'p2',
+    productTitleKey: 'inquiry.inq4.productTitle',
     productTitleHindi: 'पारंपरिक मिट्टी का सुराही बर्तन',
     productTitleEnglish: 'Terracotta Water Pot (Surahi)',
     productPrice: 450,
-    productImageUrl: 'https://images.unsplash.com/photo-1610701596007-11502861dcfa?auto=format&fit=crop&w=800&q=80',
+    productImageUrl: potImg,
+    productImage: potImg,
     craftType: 'Clay Pottery',
+    craftTypeKey: 'craft.clay.label',
     isGiCertified: true,
     buyerName: 'Marcus Lindqvist',
     buyerCompany: 'Nordic Sustainable Living, Stockholm',
-    buyerAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80',
+    buyerAvatar: marcusAvatar,
     timestamp: '2 दिन पहले · 2d ago',
     status: 'replied',
     messageOriginal: 'Thank you so much for the safe shipment of the 25 terracotta pots. Every single item arrived intact in Stockholm and our eco-design gallery clients love the natural cooling clay finish!',
+    messageKey: 'inquiry.inq4.message',
     messageHindi: '25 टेराकोटा बर्तनों की सुरक्षित डिलीवरी के लिए बहुत-बहुत धन्यवाद। स्टॉकहोम में हर एक बर्तन सुरक्षित पहुंचा और हमारे ग्राहकों को प्राकृतिक मिट्टी का काम बहुत पसंद आया।',
     isBulk: false,
     isGiQuery: false,
+    tagKey: 'inquiry.inq4.tag',
     tagHindi: 'समीक्षा में',
     tagEnglish: 'Under review',
     suggestedReplies: [
@@ -114,21 +160,26 @@ export const mockInquiries = [
   {
     id: 'inq-5',
     productId: 'p5',
+    productTitleKey: 'inquiry.inq5.productTitle',
     productTitleHindi: 'जरदोजी कढ़ाई वाला मखमली कुशन कवर',
     productTitleEnglish: 'Zardozi Embroidered Velvet Cushion Cover',
     productPrice: 950,
-    productImageUrl: 'https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?auto=format&fit=crop&w=800&q=80',
+    productImageUrl: cushionImg,
+    productImage: cushionImg,
     craftType: 'Zardozi Embroidery',
+    craftTypeKey: 'craft.zardozi.label',
     isGiCertified: true,
     buyerName: 'Amina Al-Mansoor',
     buyerCompany: 'Majlis Home Interiors, Dubai',
-    buyerAvatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=300&q=80',
+    buyerAvatar: aminaAvatar,
     timestamp: '3 दिन पहले · 3d ago',
     status: 'replied',
     messageOriginal: 'We love the royal gold zari embroidery. Can you create custom jewel-toned variants in emerald green and royal navy for a hotel hospitality project?',
+    messageKey: 'inquiry.inq5.message',
     messageHindi: 'हमें सुनहरी जरदोजी कढ़ाई बहुत पसंद आई। क्या आप एक होटल परियोजना के लिए पन्ना हरा और रॉयल नेवी रंगों में अनुकूलित संस्करण बना सकते हैं?',
     isBulk: false,
     isGiQuery: false,
+    tagKey: 'inquiry.inq5.tag',
     tagHindi: 'समीक्षा में',
     tagEnglish: 'Under review',
     suggestedReplies: [
@@ -140,23 +191,28 @@ export const mockInquiries = [
   {
     id: 'inq-6',
     productId: 'p6',
+    productTitleKey: 'inquiry.inq6.productTitle',
     productTitleHindi: 'पीतल का मोर वाला नक्काशीदार दीया',
     productTitleEnglish: 'Brass Temple Peacock Diya Lamp',
     productPrice: 2400,
-    productImageUrl: 'https://images.unsplash.com/photo-1582738411706-bfc8e691d1c2?auto=format&fit=crop&w=800&q=80',
+    productImageUrl: diyaImg,
+    productImage: diyaImg,
     craftType: 'Brass Metalwork',
+    craftTypeKey: 'craft.brass.label',
     isGiCertified: true,
     buyerName: 'Vikramaditya Rao',
     buyerCompany: 'Parampara Heritage Boutique, Bengaluru',
-    buyerAvatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=300&q=80',
+    buyerAvatar: vikramAvatar,
     timestamp: '4 दिन पहले · 4d ago',
     status: 'unread',
     messageOriginal: 'Looking to order 30 peacock brass diya lamps for corporate Diwali gift hampers. Could you confirm lead time and if custom gift packaging is possible?',
+    messageKey: 'inquiry.inq6.message',
     messageHindi: 'कॉर्पोरेट दिवाली उपहार के लिए 30 मोर वाले पीतल दीये ऑर्डर करना चाहते हैं। क्या आप डिलीवरी समय और कस्टम उपहार पैकेजिंग की पुष्टि कर सकते हैं?',
     isBulk: true,
     bulkQuantity: 30,
     bulkEstimatedValue: 72000,
     isGiQuery: false,
+    tagKey: 'inquiry.inq6.tag',
     tagHindi: 'थोक पूछताछ',
     tagEnglish: 'Bulk Inquiry',
     suggestedReplies: [
@@ -167,3 +223,5 @@ export const mockInquiries = [
     mockEnglishReply: 'Dear Vikramaditya ji,\n\nWe would be pleased to supply **30 handcrafted peacock brass diyas** for your corporate Diwali hampers. We can package each in an artisan-embossed gift box with authentic brass care cards.\n\nAt 30 units, our wholesale rate is **₹2,150 per piece** (total: **₹64,500**). Delivery timeline is **15 days**.\n\nWarm regards,\nRam Niwas\nMaster Artisan',
   },
 ];
+
+export default mockInquiries;

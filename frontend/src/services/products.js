@@ -21,7 +21,7 @@ export async function createListing(data) {
     isGiCertified: data.isGiCertified || false,
     descriptionHindi: data.descriptionHindi || '',
     descriptionEnglish: data.descriptionEnglish || '',
-    imageUrl: data.imageUrl || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&q=80',
+    imageUrl: data.imageUrl || require('../../assets/images/products/banarasi-saree.jpg'),
     inquiryCount: 0,
     viewsCount: 0,
     keywords: data.keywords || [],

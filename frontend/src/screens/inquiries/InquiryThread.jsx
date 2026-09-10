@@ -16,6 +16,7 @@ import FocusModeHeader from '../../components/FocusModeHeader';
 import AudioPlayerInline from '../../components/AudioPlayerInline';
 import PrimaryButton from '../../components/PrimaryButton';
 import { useTranslation } from '../../i18n';
+import { resolveImageSource } from '../../utils/imageUtils';
 
 export default function InquiryThread({ route, navigation }) {
   const { inquiry } = route?.params || {};
@@ -23,9 +24,10 @@ export default function InquiryThread({ route, navigation }) {
   const [selectedChip, setSelectedChip] = useState(null);
 
   const productTitle =
-    currentLanguage === 'en'
+    t(inquiry?.productTitleKey) ||
+    (currentLanguage === 'en'
       ? inquiry?.productTitleEnglish || inquiry?.productTitleHindi || 'Handcrafted Craft'
-      : inquiry?.productTitleHindi || inquiry?.productTitleEnglish || 'हस्तशिल्प उत्पाद';
+      : inquiry?.productTitleHindi || inquiry?.productTitleEnglish || 'हस्तशिल्प उत्पाद');
 
   const suggestedReplies = inquiry?.suggestedReplies || [
     'हाँ, यह उत्पाद उपलब्ध है (Yes, available)',
@@ -72,12 +74,12 @@ export default function InquiryThread({ route, navigation }) {
         {/* 2. Top Product-Context Card */}
         <View style={styles.productCard}>
           <Image
-            source={{ uri: inquiry?.productImageUrl }}
+            source={resolveImageSource(inquiry?.productImageUrl || inquiry?.productImage)}
             style={styles.productImage}
           />
           <View style={styles.productDetails}>
             <View style={styles.categoryRow}>
-              <Text style={styles.craftTypeTag}>{inquiry?.craftType || 'Artisan Craft'}</Text>
+              <Text style={styles.craftTypeTag}>{t(inquiry?.craftTypeKey) || inquiry?.craftType || 'Artisan Craft'}</Text>
               {inquiry?.isGiCertified && (
                 <View style={styles.giBadge}>
                   <Ionicons name="ribbon" size={11} color={colors.surface.white} />
@@ -98,7 +100,7 @@ export default function InquiryThread({ route, navigation }) {
         <View style={styles.messageBubbleWrapper}>
           <View style={styles.bubbleHeaderRow}>
             <Image
-              source={{ uri: inquiry?.buyerAvatar }}
+              source={resolveImageSource(inquiry?.buyerAvatar)}
               style={styles.avatarMini}
             />
             <Text style={styles.bubbleSenderName}>{inquiry?.buyerName}</Text>
@@ -115,7 +117,7 @@ export default function InquiryThread({ route, navigation }) {
           </View>
         </View>
 
-        {/* 4. AI-Translated Hindi Bubble (Visually distinct: tinted cream/orange + rust left border) */}
+        {/* 4. AI-Translated Bubble (Visually distinct: tinted cream/orange + rust left border) */}
         <View style={styles.messageBubbleWrapper}>
           <View style={styles.bubbleHeaderRow}>
             <View style={styles.aiIconBadge}>
@@ -128,13 +130,13 @@ export default function InquiryThread({ route, navigation }) {
 
           <View style={styles.translatedBubble}>
             <Text style={styles.translatedMessageText}>
-              {inquiry?.messageHindi}
+              {t(inquiry?.messageKey) || inquiry?.messageHindi}
             </Text>
 
             {/* Embedded AudioPlayerInline inside the translated bubble */}
             <AudioPlayerInline
-              textToSpeak={inquiry?.messageHindi}
-              language="hi-IN"
+              textToSpeak={t(inquiry?.messageKey) || inquiry?.messageHindi}
+              language={currentLanguage === 'en' ? 'en-IN' : 'hi-IN'}
               label="हिंदी में सुनें · Listen in Hindi"
               playingLabel="ऑडियो चल रहा है... · Playing..."
               variant="bubble"

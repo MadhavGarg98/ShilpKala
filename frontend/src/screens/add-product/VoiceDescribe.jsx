@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   SafeAreaView,
   View,
@@ -10,8 +10,9 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
-import { requestRecordingPermissionsAsync } from 'expo-audio';
+import { useAudioRecorder, RecordingPresets, requestRecordingPermissionsAsync } from 'expo-audio';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
@@ -19,57 +20,118 @@ import PrimaryButton from '../../components/PrimaryButton';
 import StepFlowHeader from '../../components/StepFlowHeader';
 import VoiceInputButton from '../../components/VoiceInputButton';
 import PermissionFallback from '../../components/PermissionFallback';
-import { streamVoiceTranscription } from '../../services/ai';
+import { transcribeAudio } from '../../services/ai';
 import { useTranslation } from '../../i18n';
+import { resolveImageSource } from '../../utils/imageUtils';
 
 export default function VoiceDescribe({ route, navigation }) {
   const imageUri =
     route?.params?.imageUri ||
-    'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&q=80';
+    require('../../../assets/images/products/banarasi-saree.jpg');
 
   const [transcribedText, setTranscribedText] = useState('');
   const [isTypingMode, setIsTypingMode] = useState(false);
-  const [isStreaming, setIsStreaming] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [micDenied, setMicDenied] = useState(false);
-  const stopStreamRef = useRef(null);
+  const [transcriptionSource, setTranscriptionSource] = useState(null);
+  const [errorMessage, setErrorMessage] = useState(null);
+
   const { t, currentLanguage } = useTranslation();
 
-  const handleStartVoice = async () => {
-    if (isStreaming) return;
+  // Expo-audio recorder hook
+  let audioRecorder = null;
+  try {
+    audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  } catch (e) {
+    console.warn('[VoiceDescribe] useAudioRecorder unavailable on current platform:', e);
+  }
 
-    try {
-      const { status, granted } = await requestRecordingPermissionsAsync();
-      if (status !== 'granted' && !granted) {
-        setMicDenied(true);
-        return;
+  const handleToggleVoice = async () => {
+    if (isProcessing) return;
+
+    if (isRecording) {
+      // Stop recording and send audio to backend
+      setIsRecording(false);
+      setIsProcessing(true);
+      setErrorMessage(null);
+
+      try {
+        let recordedUri = null;
+        if (audioRecorder && audioRecorder.stop) {
+          await audioRecorder.stop();
+          recordedUri = audioRecorder.uri;
+        }
+
+        const result = await transcribeAudio({
+          audioUri: recordedUri,
+          languageCode: currentLanguage || 'hi-IN',
+          forceDemo: !recordedUri,
+        });
+
+        if (result?.transcript) {
+          setTranscribedText(result.transcript);
+          setTranscriptionSource(result.source || 'sarvam');
+        }
+      } catch (err) {
+        console.warn('[VoiceDescribe] Voice transcription error:', err);
+        setErrorMessage(err.message || 'Transcription connection timeout');
+      } finally {
+        setIsProcessing(false);
       }
-    } catch (e) {
-      // ignore on platforms without Audio permissions
+    } else {
+      // Start recording
+      setErrorMessage(null);
+      try {
+        const { status, granted } = await requestRecordingPermissionsAsync();
+        if (status !== 'granted' && !granted) {
+          setMicDenied(true);
+          return;
+        }
+      } catch (e) {
+        // Continue for environments without explicit audio permission
+      }
+
+      try {
+        if (audioRecorder && audioRecorder.prepareToRecordAsync) {
+          await audioRecorder.prepareToRecordAsync();
+          audioRecorder.record();
+        }
+        setIsRecording(true);
+      } catch (err) {
+        console.warn('[VoiceDescribe] Recording error, attempting direct demo STT fallback:', err);
+        // Instant graceful demo transcription if audio hardware unsupported
+        setIsProcessing(true);
+        try {
+          const result = await transcribeAudio({
+            audioUri: null,
+            languageCode: currentLanguage || 'hi-IN',
+            forceDemo: true,
+          });
+          setTranscribedText(result.transcript);
+          setTranscriptionSource(result.source || 'demo_cache');
+        } catch (e) {
+          setErrorMessage('माइक्रोफ़ोन अनुपलब्ध है। कृपया नीचे लिखकर विवरण दें।');
+          setIsTypingMode(true);
+        } finally {
+          setIsProcessing(false);
+        }
+      }
     }
-
-    setIsStreaming(true);
-    setTranscribedText('');
-
-    stopStreamRef.current = streamVoiceTranscription({
-      onWord: (text) => {
-        setTranscribedText(text);
-      },
-      onComplete: () => {
-        setIsStreaming(false);
-      },
-    });
   };
 
   const handleClear = () => {
-    if (stopStreamRef.current) stopStreamRef.current();
-    setIsStreaming(false);
+    setIsRecording(false);
+    setIsProcessing(false);
     setTranscribedText('');
+    setTranscriptionSource(null);
+    setErrorMessage(null);
   };
 
   const handleContinue = () => {
     navigation.navigate('ListingReview', {
       imageUri,
-      transcript: transcribedText,
+      transcript: transcribedText.trim(),
     });
   };
 
@@ -111,7 +173,7 @@ export default function VoiceDescribe({ route, navigation }) {
           {/* Enhanced Thumbnail + Title Card */}
           <View style={styles.topInfoCard}>
             <View style={styles.thumbWrapper}>
-              <Image source={{ uri: imageUri }} style={styles.thumbnail} />
+              <Image source={resolveImageSource(imageUri)} style={styles.thumbnail} />
               <View style={styles.enhancedChip}>
                 <Ionicons name="sparkles" size={10} color={colors.surface.white} />
                 <Text style={styles.enhancedChipText}>{t('enhancedBadge')}</Text>
@@ -132,28 +194,55 @@ export default function VoiceDescribe({ route, navigation }) {
           <View style={styles.voiceSection}>
             <VoiceInputButton
               size={68}
-              onTranscribed={() => {}}
+              onTranscribed={(text) => {
+                setTranscribedText(text);
+                setTranscriptionSource('voice_direct');
+              }}
               style={styles.largeMic}
             />
 
             <TouchableOpacity
               activeOpacity={0.8}
-              onPress={handleStartVoice}
+              onPress={handleToggleVoice}
+              disabled={isProcessing}
               style={[
                 styles.voiceTriggerBtn,
-                isStreaming && styles.voiceTriggerBtnActive,
+                isRecording && styles.voiceTriggerBtnActive,
+                isProcessing && styles.voiceTriggerBtnProcessing,
               ]}
             >
-              <Ionicons
-                name={isStreaming ? 'pulse' : 'mic'}
-                size={18}
-                color={colors.surface.white}
-              />
+              {isProcessing ? (
+                <ActivityIndicator size="small" color={colors.surface.white} />
+              ) : (
+                <Ionicons
+                  name={isRecording ? 'stop' : 'mic'}
+                  size={18}
+                  color={colors.surface.white}
+                />
+              )}
               <Text style={styles.voiceTriggerText}>
-                {isStreaming ? t('listeningWave') : 'बोलना शुरू करें / Tap to Speak'}
+                {isProcessing
+                  ? 'ध्वनि विश्लेषण जारी... / Transcribing...'
+                  : isRecording
+                  ? 'बोलना समाप्त करें (टैप करें) / Tap to Finish'
+                  : 'बोलना शुरू करें / Tap to Speak'}
               </Text>
             </TouchableOpacity>
           </View>
+
+          {/* Error Banner with Retry */}
+          {errorMessage && (
+            <View style={styles.errorBanner}>
+              <Ionicons name="alert-circle" size={18} color={colors.status.amber} />
+              <Text style={styles.errorBannerText}>{errorMessage}</Text>
+              <TouchableOpacity
+                onPress={() => setIsTypingMode(true)}
+                style={styles.errorActionBtn}
+              >
+                <Text style={styles.errorActionText}>टाइप करें / Type</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           {/* Live Transcription Box */}
           <View style={styles.transcriptCard}>
@@ -162,12 +251,19 @@ export default function VoiceDescribe({ route, navigation }) {
                 <View
                   style={[
                     styles.pulseDot,
-                    isStreaming && styles.pulseDotActive,
+                    isRecording && styles.pulseDotActive,
                   ]}
                 />
                 <Text style={styles.transcriptLabel}>
-                  {t('liveTranscriptLabel')}
+                  {isTypingMode ? 'लिखित विवरण • Artisan Description' : t('liveTranscriptLabel')}
                 </Text>
+                {transcriptionSource && !isTypingMode && (
+                  <View style={styles.sourceTag}>
+                    <Text style={styles.sourceTagText}>
+                      {transcriptionSource.toUpperCase()}
+                    </Text>
+                  </View>
+                )}
               </View>
 
               {hasContent && (
@@ -184,8 +280,9 @@ export default function VoiceDescribe({ route, navigation }) {
                 multiline
                 value={transcribedText}
                 onChangeText={setTranscribedText}
-                placeholder="उदा. यह शुद्ध रेशम की साड़ी है..."
+                placeholder="उदा. यह शुद्ध कातून सिल्क बनारसी साड़ी है, जिसमें पारंपरिक ज़री काम है..."
                 placeholderTextColor={colors.text.muted}
+                autoFocus
               />
             ) : (
               <Text
@@ -224,7 +321,7 @@ export default function VoiceDescribe({ route, navigation }) {
           <PrimaryButton
             title={buttonTitle}
             arrow={true}
-            disabled={!hasContent}
+            disabled={!hasContent || isProcessing}
             onPress={handleContinue}
           />
         </View>
@@ -321,11 +418,41 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   voiceTriggerBtnActive: {
-    backgroundColor: colors.status.amber,
+    backgroundColor: '#C53030',
+  },
+  voiceTriggerBtnProcessing: {
+    backgroundColor: colors.navy.deep,
   },
   voiceTriggerText: {
     color: colors.surface.white,
     fontSize: 14,
+    fontWeight: '700',
+  },
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#FFF8F4',
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#F8D7C8',
+    marginBottom: 12,
+  },
+  errorBannerText: {
+    flex: 1,
+    fontSize: 12,
+    color: '#8A320A',
+  },
+  errorActionBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+    backgroundColor: colors.primary.rust,
+  },
+  errorActionText: {
+    color: colors.surface.white,
+    fontSize: 11,
     fontWeight: '700',
   },
   transcriptCard: {
@@ -362,6 +489,17 @@ const styles = StyleSheet.create({
   },
   transcriptLabel: {
     fontSize: 12,
+    fontWeight: '700',
+    color: colors.navy.deep,
+  },
+  sourceTag: {
+    backgroundColor: '#EBF5FA',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  sourceTagText: {
+    fontSize: 9,
     fontWeight: '700',
     color: colors.navy.deep,
   },

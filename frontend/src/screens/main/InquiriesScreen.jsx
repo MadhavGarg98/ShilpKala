@@ -21,6 +21,7 @@ import VoiceInputButton from '../../components/VoiceInputButton';
 import { useAppStore } from '../../store/useAppStore';
 import { sendInquiryReply } from '../../services/inquiries';
 import { useTranslation } from '../../i18n';
+import { resolveImageSource } from '../../utils/imageUtils';
 
 const STATUS_FILTERS = ['all', 'unread', 'read', 'replied'];
 
@@ -113,7 +114,7 @@ export default function InquiriesScreen() {
         {/* Header Row */}
         <View style={styles.inquiryHeader}>
           <Image
-            source={{ uri: item.buyerAvatar }}
+            source={resolveImageSource(item.buyerAvatar)}
             style={styles.buyerAvatar}
           />
           <View style={styles.buyerInfoCol}>
@@ -136,13 +137,14 @@ export default function InquiriesScreen() {
         {product && (
           <View style={styles.productRefStrip}>
             <Image
-              source={{ uri: product.imageUrl }}
+              source={resolveImageSource(product.imageUrl || product.image)}
               style={styles.productThumb}
             />
             <Text style={styles.productRefTitle} numberOfLines={1}>
-              {currentLanguage === 'en'
-                ? product.titleEnglish
-                : product.titleHindi}
+              {t(product.titleKey) ||
+                (currentLanguage === 'en'
+                  ? product.titleEnglish
+                  : product.titleHindi)}
             </Text>
             <Text style={styles.productRefPrice}>
               ₹{product.price?.toLocaleString('en-IN')}
@@ -153,9 +155,10 @@ export default function InquiriesScreen() {
         {/* Message */}
         <View style={styles.messageBlock}>
           <Text style={styles.messageText}>
-            {currentLanguage === 'en'
-              ? item.messageOriginal
-              : item.messageHindi}
+            {t(item.messageKey) ||
+              (currentLanguage === 'en'
+                ? item.messageOriginal
+                : item.messageHindi)}
           </Text>
           {currentLanguage !== 'en' && (
             <Text style={styles.messageSecondary}>{item.messageOriginal}</Text>
