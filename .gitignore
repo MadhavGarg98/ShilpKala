@@ -42,3 +42,15 @@ example
 /ios
 /android
 backend/.env
+
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+
+# Python tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/

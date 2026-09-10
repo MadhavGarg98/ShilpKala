@@ -28,13 +28,19 @@ export default function VoiceDescribe({ route, navigation }) {
   const imageUri =
     route?.params?.imageUri ||
     require('../../../assets/images/products/banarasi-saree.jpg');
+  const initialText =
+    route?.params?.initialDescription ||
+    route?.params?.descriptionData?.description ||
+    '';
 
-  const [transcribedText, setTranscribedText] = useState('');
+  const [transcribedText, setTranscribedText] = useState(initialText);
   const [isTypingMode, setIsTypingMode] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [micDenied, setMicDenied] = useState(false);
-  const [transcriptionSource, setTranscriptionSource] = useState(null);
+  const [transcriptionSource, setTranscriptionSource] = useState(
+    initialText ? 'vision_auto' : null
+  );
   const [errorMessage, setErrorMessage] = useState(null);
 
   const { t, currentLanguage } = useTranslation();
@@ -52,6 +58,7 @@ export default function VoiceDescribe({ route, navigation }) {
 
     if (isRecording) {
       // Stop recording and send audio to backend
+      console.log('[VoiceDescribe] Stopping audio recording...');
       setIsRecording(false);
       setIsProcessing(true);
       setErrorMessage(null);
@@ -61,46 +68,57 @@ export default function VoiceDescribe({ route, navigation }) {
         if (audioRecorder && audioRecorder.stop) {
           await audioRecorder.stop();
           recordedUri = audioRecorder.uri;
+          console.log('[VoiceDescribe] Audio recording stopped. File URI:', recordedUri);
         }
 
+        console.log('[VoiceDescribe] Sending audio to /api/voice/transcribe with lang:', currentLanguage || 'hi-IN');
         const result = await transcribeAudio({
           audioUri: recordedUri,
           languageCode: currentLanguage || 'hi-IN',
           forceDemo: !recordedUri,
         });
 
+        console.log('[VoiceDescribe] Transcription result received:', result);
         if (result?.transcript) {
-          setTranscribedText(result.transcript);
+          setTranscribedText((prev) =>
+            prev && prev.trim() ? `${prev}\n${result.transcript}` : result.transcript
+          );
           setTranscriptionSource(result.source || 'sarvam');
         }
       } catch (err) {
-        console.warn('[VoiceDescribe] Voice transcription error:', err);
-        setErrorMessage(err.message || 'Transcription connection timeout');
+        console.error('[VoiceDescribe] Voice transcription error:', err);
+        setErrorMessage(`ऑडियो ट्रांसक्रिप्शन त्रुटि: ${err.message || 'Connection failed'}`);
       } finally {
         setIsProcessing(false);
       }
     } else {
       // Start recording
+      console.log('[VoiceDescribe] Requesting microphone permission...');
       setErrorMessage(null);
       try {
-        const { status, granted } = await requestRecordingPermissionsAsync();
-        if (status !== 'granted' && !granted) {
+        const perm = await requestRecordingPermissionsAsync();
+        console.log('[VoiceDescribe] Microphone permission response:', perm);
+        if (perm && perm.status !== 'granted' && !perm.granted) {
+          console.warn('[VoiceDescribe] Microphone permission denied by user.');
           setMicDenied(true);
           return;
         }
       } catch (e) {
-        // Continue for environments without explicit audio permission
+        console.warn('[VoiceDescribe] Permission check skipped or unsupported:', e);
       }
 
       try {
         if (audioRecorder && audioRecorder.prepareToRecordAsync) {
+          console.log('[VoiceDescribe] Preparing recorder...');
           await audioRecorder.prepareToRecordAsync();
+          console.log('[VoiceDescribe] Starting recorder...');
           audioRecorder.record();
+          setIsRecording(true);
+        } else {
+          throw new Error('Audio hardware recorder not ready on this platform');
         }
-        setIsRecording(true);
       } catch (err) {
-        console.warn('[VoiceDescribe] Recording error, attempting direct demo STT fallback:', err);
-        // Instant graceful demo transcription if audio hardware unsupported
+        console.warn('[VoiceDescribe] Native recorder error, attempting demo audio STT test:', err);
         setIsProcessing(true);
         try {
           const result = await transcribeAudio({
@@ -108,9 +126,12 @@ export default function VoiceDescribe({ route, navigation }) {
             languageCode: currentLanguage || 'hi-IN',
             forceDemo: true,
           });
-          setTranscribedText(result.transcript);
+          setTranscribedText((prev) =>
+            prev && prev.trim() ? `${prev}\n${result.transcript}` : result.transcript
+          );
           setTranscriptionSource(result.source || 'demo_cache');
         } catch (e) {
+          console.error('[VoiceDescribe] Recording fallback failed:', e);
           setErrorMessage('माइक्रोफ़ोन अनुपलब्ध है। कृपया नीचे लिखकर विवरण दें।');
           setIsTypingMode(true);
         } finally {
@@ -194,10 +215,9 @@ export default function VoiceDescribe({ route, navigation }) {
           <View style={styles.voiceSection}>
             <VoiceInputButton
               size={68}
-              onTranscribed={(text) => {
-                setTranscribedText(text);
-                setTranscriptionSource('voice_direct');
-              }}
+              isRecording={isRecording}
+              isProcessing={isProcessing}
+              onPress={handleToggleVoice}
               style={styles.largeMic}
             />
 

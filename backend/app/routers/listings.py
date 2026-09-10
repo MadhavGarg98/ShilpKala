@@ -41,7 +41,8 @@ class GenerateListingRequest(BaseModel):
 class GenerateListingResponse(BaseModel):
     title: str
     title_english: Optional[str] = None
-    description_local: str
+    description_local: str          # backward-compat: same as description_hi when set
+    description_hi: Optional[str] = None   # Hindi description (Devanagari) — spec-required
     description_en: str
     is_gi_match: bool = False
     gi_name: Optional[str] = None
@@ -55,17 +56,17 @@ class GenerateListingResponse(BaseModel):
 @router.post(
     "/generate",
     response_model=GenerateListingResponse,
-    summary="AI Multilingual Listing Generator (Transcript + Image -> Structured Listing)"
+    summary="AI Listing Generator — Groq llama-3.3-70b-versatile (Transcript → Structured Listing)"
 )
 def generate_listing(req: GenerateListingRequest):
     """
-    AI Listing Generation with Provider Chain:
-    - Primary: Groq (llama-3.3-70b-versatile) for sub-second structured JSON generation.
-    - Fallback: Anthropic (claude-3-haiku) for low-confidence languages or rate limits.
-    - Safety Net: Multilingual craft-aware deterministic template fallback.
-    - Generates description in the artisan's local language AND in English for global buyers.
-    - Validates JSON format with automatic retry before cascading.
-    - Returns source: 'groq', 'anthropic_fallback', or 'template_fallback'.
+    AI Listing Generation (Groq-only pipeline):
+    - Calls Groq (llama-3.3-70b-versatile) with a structured JSON prompt.
+    - Returns: title, description_en (English), description_hi (Hindi/Devanagari), keywords[].
+    - On JSON parse failure: retries once with a stricter prompt, then falls back to a
+      labeled deterministic template response — never crashes.
+    - Source field: 'groq' | 'template_fallback'.
+    - No Anthropic or OpenAI keys are used in this pipeline.
     """
     if not req.transcript or len(req.transcript.strip()) == 0:
         raise HTTPException(status_code=400, detail="Transcript cannot be empty.")
@@ -80,6 +81,7 @@ def generate_listing(req: GenerateListingRequest):
         return GenerateListingResponse(**result)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Listing generation failed: {str(e)}")
+
 
 @router.get("", response_model=List[ListingResponse])
 def get_listings(
