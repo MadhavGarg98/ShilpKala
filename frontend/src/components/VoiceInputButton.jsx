@@ -5,11 +5,15 @@ import {
   StyleSheet,
   Animated,
   Easing,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 
 export default function VoiceInputButton({
+  isRecording = false,
+  isProcessing = false,
+  onPress,
   onTranscribed,
   mockText = 'हस्तनिर्मित बनारसी साड़ी',
   delayMs = 1500,
@@ -18,7 +22,8 @@ export default function VoiceInputButton({
   style,
   testID,
 }) {
-  const [isListening, setIsListening] = useState(false);
+  const [internalListening, setInternalListening] = useState(false);
+  const activeListening = onPress ? isRecording : internalListening;
 
   // Animation values
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -32,6 +37,14 @@ export default function VoiceInputButton({
   const animLoopRef = useRef(null);
 
   useEffect(() => {
+    if (activeListening) {
+      startAnimation();
+    } else {
+      stopAnimation();
+    }
+  }, [activeListening]);
+
+  useEffect(() => {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
       if (animLoopRef.current) animLoopRef.current.stop();
@@ -39,6 +52,7 @@ export default function VoiceInputButton({
   }, []);
 
   const startAnimation = () => {
+    if (animLoopRef.current) animLoopRef.current.stop();
     // Pulse animation for outer ring
     const pulse = Animated.loop(
       Animated.parallel([
@@ -114,14 +128,18 @@ export default function VoiceInputButton({
   };
 
   const handlePress = () => {
-    if (disabled || isListening) return;
+    if (disabled || isProcessing) return;
 
-    setIsListening(true);
-    startAnimation();
+    if (onPress) {
+      onPress();
+      return;
+    }
+
+    if (internalListening) return;
+    setInternalListening(true);
 
     timerRef.current = setTimeout(() => {
-      stopAnimation();
-      setIsListening(false);
+      setInternalListening(false);
       if (onTranscribed) {
         onTranscribed(mockText);
       }
@@ -134,7 +152,7 @@ export default function VoiceInputButton({
   return (
     <View style={[styles.wrapper, { width: buttonSize + 24, height: buttonSize + 24 }, style]}>
       {/* Animated pulsing halo in listening state */}
-      {isListening && (
+      {activeListening && (
         <Animated.View
           style={[
             styles.pulseHalo,
@@ -154,20 +172,22 @@ export default function VoiceInputButton({
         testID={testID}
         activeOpacity={0.8}
         onPress={handlePress}
-        disabled={disabled || isListening}
+        disabled={disabled || isProcessing}
         style={[
           styles.button,
           {
             width: buttonSize,
             height: buttonSize,
             borderRadius: buttonSize / 2,
-            backgroundColor: isListening ? colors.primary.rust : colors.background.cream,
-            borderColor: isListening ? colors.primary.rust : colors.status.amber,
+            backgroundColor: activeListening ? colors.primary.rust : colors.background.cream,
+            borderColor: activeListening ? colors.primary.rust : colors.status.amber,
           },
           disabled && styles.disabledButton,
         ]}
       >
-        {isListening ? (
+        {isProcessing ? (
+          <ActivityIndicator size="small" color={colors.primary.rust} />
+        ) : activeListening ? (
           /* Waveform animation state */
           <View style={styles.waveformContainer}>
             <Animated.View

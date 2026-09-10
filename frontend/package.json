@@ -43,11 +43,11 @@
     "zustand": "^5.0.15"
   },
   "scripts": {
-    "start": "expo start",
+    "start": "EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK=1 expo start",
     "reset-project": "node ./scripts/reset-project.js",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web",
+    "android": "EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK=1 expo start --android",
+    "ios": "EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK=1 expo start --ios",
+    "web": "EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK=1 expo start --web",
     "lint": "expo lint"
   },
   "private": true
