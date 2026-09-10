@@ -34,7 +34,7 @@ class SynthesizeResponse(BaseModel):
 @router.post(
     "/transcribe",
     response_model=TranscribeResponse,
-    summary="Speech-to-Text with Provider Chain (Sarvam Primary -> Bhashini -> Whisper)"
+    summary="Speech-to-Text via Groq Whisper (whisper-large-v3-turbo)"
 )
 async def transcribe_audio(
     file: Optional[UploadFile] = File(None),
@@ -43,11 +43,10 @@ async def transcribe_audio(
     demo: bool = Query(False, description="Developer toggle: if true, uses instant demo cache to conserve credits")
 ):
     """
-    Speech-to-Text Pipeline:
-    - Sarvam AI STT (`saaras:v3`) is called as primary provider with exact language code.
-    - If Sarvam fails or key is unset, cascades to Bhashini STT.
-    - If both cloud services are unavailable, cascades to local Whisper (`openai-whisper` on CPU).
-    - Response transparently returns `source` ('sarvam', 'bhashini', or 'whisper_fallback').
+    Speech-to-Text via Groq hosted Whisper (whisper-large-v3-turbo).
+    - Reads GROQ_API_KEY from environment — no other STT provider is used.
+    - Retries once on API failure, then returns a structured 503 error rather than crashing.
+    - Response transparently returns `source` ('groq_whisper' or 'demo_cache').
     """
     upload_file = audio or file
     if not upload_file:
@@ -64,7 +63,12 @@ async def transcribe_audio(
             filename=upload_file.filename or "voice.wav",
             force_demo=demo
         )
+        # Propagate graceful API errors from the service layer as HTTP 503
+        if res.get("error"):
+            raise HTTPException(status_code=503, detail=res.get("detail", "Transcription unavailable."))
         return TranscribeResponse(**res)
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Transcription failed: {str(e)}")
 
@@ -93,17 +97,16 @@ async def transcribe_audio_demo(
 @router.post(
     "/synthesize",
     response_model=SynthesizeResponse,
-    summary="Text-to-Speech with Provider Chain (Sarvam Primary -> ElevenLabs -> gTTS)"
+    summary="Text-to-Speech via gTTS (free, no API key required)"
 )
 async def synthesize_speech(
     req: SynthesizeRequest
 ):
     """
-    Text-to-Speech Pipeline:
-    - Sarvam AI TTS (`bulbul:v3`) is primary provider with expressive Indian voices.
-    - If Sarvam fails or key is unset, cascades to ElevenLabs (if configured).
-    - If cloud services are unavailable, cascades to local `gTTS` (zero external keys required).
-    - Response transparently returns `source` ('sarvam', 'elevenlabs', or 'gtts').
+    Text-to-Speech via gTTS (Google Text-to-Speech, free, no API key).
+    - No external paid provider is used for TTS in this pipeline.
+    - Produces an MP3 audio file returned as a URL via the storage layer.
+    - Response transparently returns `source` ('gtts' or 'demo_cache').
     """
     if not req.text or len(req.text.strip()) == 0:
         raise HTTPException(status_code=400, detail="Text field cannot be empty.")
