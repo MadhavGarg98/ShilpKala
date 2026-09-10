@@ -9,7 +9,7 @@ const delay = (ms) => new Promise((res) => setTimeout(res, ms));
  * Calls POST /api/images/enhance (or /api/images/enhance/demo).
  * Progress is driven dynamically and completes upon real backend response.
  */
-export async function enhanceImage(imageUri, onProgress) {
+export async function enhanceImage(imageUri, onProgress, cropBox = null) {
   const useDemo = isDemoMode();
   const endpoint = useDemo ? '/api/images/enhance/demo' : '/api/images/enhance';
   const url = resolveApiUrl(endpoint);
@@ -19,6 +19,11 @@ export async function enhanceImage(imageUri, onProgress) {
 
   const formData = new FormData();
   let hasRealFile = false;
+
+  if (cropBox) {
+    const cropStr = Array.isArray(cropBox) ? cropBox.join(',') : String(cropBox);
+    formData.append('crop_box', cropStr);
+  }
 
   if (typeof imageUri === 'string') {
     if (imageUri.startsWith('http://') || imageUri.startsWith('https://')) {
@@ -31,8 +36,6 @@ export async function enhanceImage(imageUri, onProgress) {
         ? `file://${imageUri}`
         : imageUri;
 
-      // Exact shape requested:
-      // formData.append('image', { uri: photoUri, name: 'photo.jpg', type: 'image/jpeg' })
       const filePart = {
         uri: photoUri,
         name: 'photo.jpg',
@@ -73,6 +76,16 @@ export async function enhanceImage(imageUri, onProgress) {
     return {
       enhancedUri: data.enhanced_url,
       originalUri: data.original_url,
+      cutoutId: data.cutout_id,
+      activePreset: data.active_preset || 'studio_white',
+      tiltCorrected: data.tilt_angle_corrected || 0.0,
+      variants: data.variants || {
+        studio_white: data.enhanced_url,
+        warm_neutral: data.enhanced_url,
+        cool_gray: data.enhanced_url,
+        enhanced: data.enhanced_url,
+        original: data.original_url,
+      },
       isEnhanced: true,
       processingTimeMs: data.processing_time_ms,
       modelUsed: data.model_used,
@@ -80,6 +93,133 @@ export async function enhanceImage(imageUri, onProgress) {
     };
   } catch (err) {
     console.error('[ai.js] Real image enhancement request failed:', err);
+    throw err;
+  }
+}
+
+/**
+ * Fast studio backdrop preset switching using the cached product cutout.
+ * Calls POST /api/images/preset
+ */
+export async function applyImagePreset(cutoutId, preset = 'studio_white') {
+  const url = resolveApiUrl(`/api/images/preset?cutout_id=${encodeURIComponent(cutoutId)}&preset=${encodeURIComponent(preset)}`);
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Accept': 'application/json' },
+    });
+    if (!response.ok) {
+      throw new Error(`Preset API failed with HTTP ${response.status}`);
+    }
+    const data = await response.json();
+    return {
+      enhancedUri: data.enhanced_url,
+      preset: data.preset,
+      cutoutId: data.cutout_id,
+      processingTimeMs: data.processing_time_ms,
+    };
+  } catch (err) {
+    console.error('[ai.js] Preset switch failed:', err);
+    throw err;
+  }
+}
+
+/**
+ * Multi-Product Detection using YOLOv8n via ShilpKala FastAPI backend.
+ * Calls POST /api/images/detect-objects
+ */
+export async function detectObjects(imageUri) {
+  const url = resolveApiUrl('/api/images/detect-objects');
+  const formData = new FormData();
+
+  if (typeof imageUri === 'string' && !imageUri.startsWith('http://') && !imageUri.startsWith('https://')) {
+    const photoUri = Platform.OS === 'android' && !imageUri.startsWith('file://') && !imageUri.startsWith('content://')
+      ? `file://${imageUri}`
+      : imageUri;
+    const filePart = {
+      uri: photoUri,
+      name: 'photo.jpg',
+      type: 'image/jpeg',
+    };
+    formData.append('image', filePart);
+    formData.append('file', filePart);
+  } else {
+    formData.append('demo', 'true');
+  }
+
+  try {
+    console.log(`[ai.js] Detecting objects via: ${url}`);
+    const response = await rnMultipartUpload(url, formData, {
+      'Accept': 'application/json',
+    });
+    const data = await response.json();
+    return {
+      count: data.count || 0,
+      imageWidth: data.image_width || 800,
+      imageHeight: data.image_height || 600,
+      objects: data.objects || [],
+      hasMultiple: (data.objects || []).length > 1,
+    };
+  } catch (err) {
+    console.warn('[ai.js] Multi-product detection error (falling back to single item):', err);
+    return { count: 1, imageWidth: 800, imageHeight: 600, objects: [], hasMultiple: false };
+  }
+}
+
+/**
+ * AI Product Description from Image via BLIP Vision + LLM engine.
+ * Calls POST /api/images/describe
+ */
+export async function describeProductImage({ imageUri, cutoutId, languageCode = 'hi-IN', craftType }) {
+  let endpoint = `/api/images/describe?language_code=${encodeURIComponent(languageCode)}`;
+  if (cutoutId) {
+    endpoint += `&cutout_id=${encodeURIComponent(cutoutId)}`;
+  }
+  if (craftType) {
+    endpoint += `&craft_type=${encodeURIComponent(craftType)}`;
+  }
+  const url = resolveApiUrl(endpoint);
+
+  const formData = new FormData();
+  if (cutoutId) {
+    formData.append('cutout_id', cutoutId);
+  }
+
+  if (typeof imageUri === 'string' && !imageUri.startsWith('http://') && !imageUri.startsWith('https://')) {
+    const photoUri = Platform.OS === 'android' && !imageUri.startsWith('file://') && !imageUri.startsWith('content://')
+      ? `file://${imageUri}`
+      : imageUri;
+    const filePart = {
+      uri: photoUri,
+      name: 'product.jpg',
+      type: 'image/jpeg',
+    };
+    formData.append('image', filePart);
+    formData.append('file', filePart);
+  }
+
+  try {
+    console.log(`[ai.js] Generating AI product description via: ${url}`);
+    const response = await rnMultipartUpload(url, formData, {
+      'Accept': 'application/json',
+    });
+    const data = await response.json();
+    return {
+      caption: data.caption,
+      title: data.title,
+      titleEn: data.title_en,
+      description: data.description,
+      descriptionEn: data.description_en,
+      keywords: data.keywords || [],
+      suggestedPriceMin: data.suggested_price_min,
+      suggestedPriceMax: data.suggested_price_max,
+      isGiMatch: data.is_gi_match,
+      giName: data.gi_name,
+      source: data.source,
+      processingTimeMs: data.processing_time_ms,
+    };
+  } catch (err) {
+    console.error('[ai.js] Product description failed:', err);
     throw err;
   }
 }

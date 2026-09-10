@@ -24,7 +24,7 @@ const FRAME_SIZE = width * 0.82;
 export default function CameraCapture({ navigation }) {
   const [permission, requestPermission] = useCameraPermissions();
   const [facing, setFacing] = useState('back');
-  const [isLowLight, setIsLowLight] = useState(false);
+  const [torch, setTorch] = useState(false);
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
   const cameraRef = useRef(null);
@@ -113,8 +113,9 @@ export default function CameraCapture({ navigation }) {
       {/* 1. Self-closing CameraView with zero children, onMountError, and onCameraReady logging */}
       <CameraView
         ref={cameraRef}
-        style={StyleSheet.absoluteFillObject}
+        style={styles.camera}
         facing={facing}
+        enableTorch={torch}
         mode="picture"
         onMountError={(error) => {
           console.error('[CameraCapture] CameraView onMountError (full object):', error?.message || error, error);
@@ -126,7 +127,7 @@ export default function CameraCapture({ navigation }) {
         }}
       />
 
-      {/* 2. Top Bar Overlay (Back, Light Pill, Camera Flip) */}
+      {/* 2. Top Bar Overlay (Back, Flash/Status Pill, Camera Flip) */}
       <View style={styles.topControlsOverlay} pointerEvents="box-none">
         <TouchableOpacity
           onPress={() => navigation.goBack()}
@@ -136,27 +137,27 @@ export default function CameraCapture({ navigation }) {
           <Ionicons name="close" size={24} color={colors.surface.white} />
         </TouchableOpacity>
 
-        {/* Lighting Status Pill */}
+        {/* Flash / Camera Status Pill */}
         <TouchableOpacity
           activeOpacity={0.8}
-          onPress={() => setIsLowLight(!isLowLight)}
+          onPress={() => setTorch(!torch)}
           style={[
             styles.lightPill,
-            isLowLight ? styles.lightPillAmber : styles.lightPillGreen,
+            torch ? styles.lightPillAmber : styles.lightPillNormal,
           ]}
         >
           <Ionicons
-            name={isLowLight ? 'warning' : 'sunny'}
+            name={torch ? 'flash' : 'camera-outline'}
             size={14}
-            color={isLowLight ? colors.status.amber : colors.status.green}
+            color={torch ? colors.status.amber : colors.navy.deep}
           />
           <Text
             style={[
               styles.lightPillText,
-              isLowLight ? styles.textAmber : styles.textGreen,
+              torch ? styles.textAmber : styles.textNavy,
             ]}
           >
-            {isLowLight ? t('lowLightWarning') : t('naturalLightOk')}
+            {torch ? 'Flash Torch: ON' : (currentLanguage === 'hi' ? 'शिल्प फ़ोटो मोड' : 'Craft Photo Mode')}
           </Text>
         </TouchableOpacity>
 
@@ -186,7 +187,7 @@ export default function CameraCapture({ navigation }) {
         </View>
       </View>
 
-      {/* 4. Bottom Controls Overlay (Gallery, Shutter Button, Light/Help) */}
+      {/* 4. Bottom Controls Overlay (Gallery, Shutter Button, Real Torch Toggle) */}
       <View style={styles.bottomControlsOverlay} pointerEvents="box-none">
         {/* Gallery Picker */}
         <TouchableOpacity
@@ -221,18 +222,20 @@ export default function CameraCapture({ navigation }) {
           )}
         </TouchableOpacity>
 
-        {/* Light Switch / Help Button */}
+        {/* Real Flash Torch Toggle */}
         <TouchableOpacity
-          onPress={() => setIsLowLight(!isLowLight)}
+          onPress={() => setTorch(!torch)}
           style={styles.helpButton}
-          accessibilityLabel="Light toggle"
+          accessibilityLabel="Toggle Flash Torch"
         >
           <Ionicons
-            name={isLowLight ? 'flash-outline' : 'bulb-outline'}
-            size={22}
-            color={colors.surface.white}
+            name={torch ? 'flash' : 'flash-outline'}
+            size={24}
+            color={torch ? '#FFD700' : colors.surface.white}
           />
-          <Text style={styles.helpText}>Light</Text>
+          <Text style={[styles.helpText, torch && styles.helpTextGold]}>
+            {torch ? 'Flash On' : 'Flash'}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -243,6 +246,11 @@ const styles = StyleSheet.create({
   darkContainer: {
     flex: 1,
     backgroundColor: '#000000',
+  },
+  camera: {
+    ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%',
   },
   permissionContainer: {
     flex: 1,
@@ -389,6 +397,10 @@ const styles = StyleSheet.create({
     borderColor: colors.status.green,
     borderWidth: 1,
   },
+  lightPillNormal: {
+    borderColor: '#E2DBD0',
+    borderWidth: 1,
+  },
   lightPillAmber: {
     borderColor: colors.status.amber,
     borderWidth: 1,
@@ -400,8 +412,15 @@ const styles = StyleSheet.create({
   textGreen: {
     color: colors.status.green,
   },
+  textNavy: {
+    color: colors.navy.deep,
+  },
   textAmber: {
     color: colors.status.amber,
+  },
+  helpTextGold: {
+    color: '#FFD700',
+    fontWeight: '700',
   },
   viewfinderCenter: {
     width: FRAME_SIZE,

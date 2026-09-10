@@ -130,6 +130,13 @@ class DemoCacheService:
         if item_key and item_key.lower() in self.cache:
             item = dict(self.cache[item_key.lower()])
             item["processing_time_ms"] = 18
+            if "variants" not in item or not item["variants"]:
+                item["variants"] = {
+                    "pro_lighting": item["enhanced_url"],
+                    "portrait": item["enhanced_url"],
+                    "studio": item["enhanced_url"],
+                    "original": item["original_url"],
+                }
             return item
 
         # 2. Match by query keyword
@@ -140,12 +147,26 @@ class DemoCacheService:
                     if key in self.cache:
                         item = dict(self.cache[key])
                         item["processing_time_ms"] = 18
+                        if "variants" not in item or not item["variants"]:
+                            item["variants"] = {
+                                "pro_lighting": item["enhanced_url"],
+                                "portrait": item["enhanced_url"],
+                                "studio": item["enhanced_url"],
+                                "original": item["original_url"],
+                            }
                         return item
 
         # 3. Default fallback to pot or first item
         default_key = "pot" if "pot" in self.cache else next(iter(self.cache.keys()))
         item = dict(self.cache[default_key])
         item["processing_time_ms"] = 18
+        if "variants" not in item or not item["variants"]:
+            item["variants"] = {
+                "pro_lighting": item["enhanced_url"],
+                "portrait": item["enhanced_url"],
+                "studio": item["enhanced_url"],
+                "original": item["original_url"],
+            }
         return item
 
     def list_demo_items(self):

@@ -158,6 +158,16 @@ class VoiceService:
                 "source": "whisper_fallback",
                 "processing_time_ms": elapsed_ms,
             }
+        except Exception as e:
+            logger.warning(f"Whisper fallback failed or not installed ({e}). Cascading to demo cache fallback...")
+            cached = voice_cache.get_demo_transcript(short_lang)
+            elapsed_ms = int((time.perf_counter() - start_time) * 1000)
+            return {
+                "transcript": cached["transcript"],
+                "language_code": target_bcp47,
+                "source": "demo_cache",
+                "processing_time_ms": elapsed_ms,
+            }
         finally:
             if os.path.exists(tmp_path):
                 try:

@@ -81,7 +81,7 @@ python test_phase2.py
 
 ### 2. Start the API Server
 ```bash
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 Interactive API documentation available at:
