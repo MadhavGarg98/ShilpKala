@@ -19,6 +19,7 @@ import SecondaryButton from '../../components/SecondaryButton';
 import VoiceInputButton from '../../components/VoiceInputButton';
 import { useAppStore } from '../../store/useAppStore';
 import { useTranslation, normalizeLanguageCode } from '../../i18n';
+import { resolveImageSource } from '../../utils/imageUtils';
 
 const SUPPORTED_LANGUAGES = [
   { code: 'hi', labelHindi: 'हिन्दी', labelEnglish: 'Hindi' },
@@ -121,7 +122,7 @@ export default function SettingsScreen({ navigation }) {
         {/* Profile Card Summary */}
         <View style={styles.profileSummaryCard}>
           <Image
-            source={{ uri: artisanProfile?.profileImageUrl || artisanProfile?.image }}
+            source={resolveImageSource(artisanProfile?.profileImageUrl || artisanProfile?.image)}
             style={styles.avatar}
           />
           <View style={styles.profileMeta}>

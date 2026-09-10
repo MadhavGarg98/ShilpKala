@@ -85,14 +85,16 @@ export default function AlertsScreen({ navigation }) {
     const isUnread = !item.isRead;
 
     const title =
-      currentLanguage === 'en'
+      (item.titleKey ? t(item.titleKey) : null) ||
+      (currentLanguage === 'en'
         ? item.titleEnglish || item.titleHindi || item.title
-        : item.titleHindi || item.titleEnglish || item.title;
+        : item.titleHindi || item.titleEnglish || item.title);
 
     const message =
-      currentLanguage === 'en'
+      (item.messageKey ? t(item.messageKey) : null) ||
+      (currentLanguage === 'en'
         ? item.messageEnglish || item.messageHindi || item.message
-        : item.messageHindi || item.messageEnglish || item.message;
+        : item.messageHindi || item.messageEnglish || item.message);
 
     return (
       <View

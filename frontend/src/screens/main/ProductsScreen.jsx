@@ -14,6 +14,7 @@ import { typography } from '../../theme/typography';
 import TabRootHeader from '../../components/TabRootHeader';
 import { useAppStore } from '../../store/useAppStore';
 import { useTranslation } from '../../i18n';
+import { resolveImageSource } from '../../utils/imageUtils';
 
 const FILTERS = ['all', 'live', 'draft'];
 
@@ -53,9 +54,10 @@ export default function ProductsScreen({ navigation }) {
 
   const renderProductCard = ({ item }) => {
     const title =
-      currentLanguage === 'en'
+      t(item.titleKey) ||
+      (currentLanguage === 'en'
         ? item.titleEnglish || item.titleHindi
-        : item.titleHindi || item.titleEnglish;
+        : item.titleHindi || item.titleEnglish);
     const isLive = item.status === 'live';
 
     return (
@@ -67,7 +69,7 @@ export default function ProductsScreen({ navigation }) {
         {/* Image */}
         <View style={styles.imageContainer}>
           <Image
-            source={{ uri: item.imageUrl || item.image }}
+            source={resolveImageSource(item.imageUrl || item.image)}
             style={styles.productImage}
           />
           {/* Status Badge */}

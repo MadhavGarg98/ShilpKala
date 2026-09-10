@@ -104,7 +104,7 @@ export default function HeritageMatch({ route, navigation }) {
               </View>
               <View style={styles.regInfoCol}>
                 <Text style={styles.regPrimary}>
-                  बनारस ब्रोकेड्स और साड़ियाँ (Banaras Brocades & Sarees)
+                  {t('craft.handloom.giName')}
                 </Text>
                 <Text style={styles.regSecondary}>
                   {t('giRegNumber')}: GI-IN-99 • Class 24 & 25 Textiles
@@ -135,9 +135,7 @@ export default function HeritageMatch({ route, navigation }) {
               {isStoryExpanded && (
                 <View style={styles.storyBody}>
                   <Text style={styles.storyParagraph}>
-                    {currentLanguage === 'en'
-                      ? 'A 500-year-old weaving tradition utilizing pure mulberry silk and authentic zari in the historic kadhua technique of Varanasi. Each motif is individually shaped on traditional pit-looms.'
-                      : '५०० वर्षों से चली आ रही शुद्ध रेशम और सुनहरी ज़री की कढ़ुआ बुनाई शैली, जो बनारस के बुनकरों की पहचान है। प्रत्येक बूटा हथकरघे पर हाथ से व्यक्तिगत रूप से बुना जाता है।'}
+                    {t('craft.handloom.heritageStory')}
                   </Text>
                 </View>
               )}

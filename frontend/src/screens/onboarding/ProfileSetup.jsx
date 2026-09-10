@@ -19,6 +19,7 @@ import VoiceInputButton from '../../components/VoiceInputButton';
 import { getCraftTypes, updateProfile } from '../../services/profile';
 import { useAppStore } from '../../store/useAppStore';
 import { useTranslation } from '../../i18n';
+import { resolveImageSource } from '../../utils/imageUtils';
 
 export default function ProfileSetup({ navigation }) {
   const completeOnboarding = useAppStore((state) => state.completeOnboarding);
@@ -58,7 +59,7 @@ export default function ProfileSetup({ navigation }) {
     await updateProfile({
       name,
       craftType: selectedCraft
-        ? `${selectedCraft.labelHindi} (${selectedCraft.labelEnglish})`
+        ? (t(selectedCraft.labelKey) || `${selectedCraft.labelHindi} (${selectedCraft.labelEnglish})`)
         : 'हथकरघा बुनाई (Handloom Weaving)',
       location,
       artisanIdStatus: hasGovtId ? 'Verified' : 'Pending',
@@ -175,7 +176,7 @@ export default function ProfileSetup({ navigation }) {
 
                     {(craft.imageUrl || craft.image) && (
                       <Image
-                        source={{ uri: craft.imageUrl || craft.image }}
+                        source={resolveImageSource(craft.imageUrl || craft.image)}
                         style={styles.craftImageThumb}
                         resizeMode="cover"
                       />
@@ -188,7 +189,7 @@ export default function ProfileSetup({ navigation }) {
                       ]}
                       numberOfLines={1}
                     >
-                      {currentLanguage === 'en' ? craft.labelEnglish : craft.labelHindi}
+                      {t(craft.labelKey) || (currentLanguage === 'en' ? craft.labelEnglish : craft.labelHindi)}
                     </Text>
                     {currentLanguage !== 'en' && (
                       <Text style={styles.craftEnglish} numberOfLines={1}>

@@ -8,6 +8,7 @@ import {
   ScrollView,
   Animated,
   ActivityIndicator,
+  TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
@@ -16,16 +17,21 @@ import PrimaryButton from '../../components/PrimaryButton';
 import StepFlowHeader from '../../components/StepFlowHeader';
 import { enhanceImage } from '../../services/ai';
 import { useTranslation } from '../../i18n';
+import { resolveImageSource } from '../../utils/imageUtils';
 
 export default function AIEnhance({ route, navigation }) {
-  const imageUri =
+  const originalImageUri =
     route?.params?.imageUri ||
-    'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&q=80';
+    require('../../../assets/images/products/banarasi-saree.jpg');
 
+  const [finalImageUri, setFinalImageUri] = useState(originalImageUri);
   const [currentStep, setCurrentStep] = useState(1);
   const [percent, setPercent] = useState(0);
   const [statusKey, setStatusKey] = useState('enhancingImage');
   const [isDone, setIsDone] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(null);
+  const [retryCount, setRetryCount] = useState(0);
+
   const progressAnim = useRef(new Animated.Value(0)).current;
   const { t, currentLanguage } = useTranslation();
 
@@ -33,8 +39,13 @@ export default function AIEnhance({ route, navigation }) {
     let isMounted = true;
 
     async function runEnhancement() {
+      setErrorMessage(null);
+      setIsDone(false);
+      setPercent(10);
+      progressAnim.setValue(0.1);
+
       try {
-        await enhanceImage(imageUri, (step, pct, key) => {
+        const result = await enhanceImage(originalImageUri, (step, pct, key) => {
           if (!isMounted) return;
           setCurrentStep(step);
           setPercent(pct);
@@ -42,17 +53,23 @@ export default function AIEnhance({ route, navigation }) {
 
           Animated.timing(progressAnim, {
             toValue: pct / 100,
-            duration: 400,
+            duration: 350,
             useNativeDriver: false,
           }).start();
         });
 
         if (isMounted) {
+          if (result?.enhancedUri) {
+            setFinalImageUri(result.enhancedUri);
+          }
           setIsDone(true);
           setStatusKey('aiEnhanceComplete');
         }
       } catch (err) {
-        console.error('Enhancement error', err);
+        if (isMounted) {
+          console.warn('[AIEnhance] Enhancement failed:', err);
+          setErrorMessage(err?.message || 'Server connection timeout');
+        }
       }
     }
 
@@ -61,13 +78,24 @@ export default function AIEnhance({ route, navigation }) {
     return () => {
       isMounted = false;
     };
-  }, [imageUri]);
+  }, [originalImageUri, retryCount]);
 
   const handleNext = () => {
     navigation.navigate('VoiceDescribe', {
-      imageUri,
-      isEnhanced: true,
+      imageUri: finalImageUri,
+      isEnhanced: isDone,
     });
+  };
+
+  const handleRetry = () => {
+    setErrorMessage(null);
+    setRetryCount((prev) => prev + 1);
+  };
+
+  const handleUseOriginal = () => {
+    setFinalImageUri(originalImageUri);
+    setIsDone(true);
+    setErrorMessage(null);
   };
 
   const steps = [
@@ -95,53 +123,77 @@ export default function AIEnhance({ route, navigation }) {
       >
         {/* Main Image Preview Card with Enhanced Badge */}
         <View style={styles.imageCard}>
-          <Image source={{ uri: imageUri }} style={styles.imagePreview} />
+          <Image source={resolveImageSource(finalImageUri)} style={styles.imagePreview} />
           <View style={styles.badgeWrap}>
             <View
               style={[
                 styles.liveTag,
-                isDone ? styles.tagSuccess : styles.tagProcessing,
+                isDone ? styles.tagSuccess : (errorMessage ? styles.tagError : styles.tagProcessing),
               ]}
             >
               <Ionicons
-                name={isDone ? 'sparkles' : 'sync'}
+                name={isDone ? 'sparkles' : (errorMessage ? 'alert-circle' : 'sync')}
                 size={13}
                 color={colors.surface.white}
               />
               <Text style={styles.liveTagText}>
-                {isDone ? t('enhancedBadge') : `${percent}%`}
+                {isDone ? t('enhancedBadge') : (errorMessage ? 'Original' : `${percent}%`)}
               </Text>
             </View>
           </View>
         </View>
 
-        {/* Progress Bar & Status Text */}
-        <View style={styles.progressSection}>
-          <View style={styles.progressHeader}>
-            <Text style={styles.statusTextPrimary}>{t(statusKey)}</Text>
-            <Text style={styles.percentText}>{percent}%</Text>
+        {/* Error Banner with Retry & Bypass Options */}
+        {errorMessage ? (
+          <View style={styles.errorCard}>
+            <View style={styles.errorHeader}>
+              <Ionicons name="warning" size={20} color={colors.status.amber} />
+              <Text style={styles.errorTitle}>
+                फोटो सुधारने में समस्या • Enhancement Notice
+              </Text>
+            </View>
+            <Text style={styles.errorDescription}>
+              सर्वर से कनेक्ट नहीं हो सका ({errorMessage})। आप पुनः प्रयास कर सकते हैं या मूल फ़ोटो के साथ आगे बढ़ सकते हैं।
+            </Text>
+            <View style={styles.errorActionsRow}>
+              <TouchableOpacity onPress={handleRetry} style={styles.retryBtn}>
+                <Ionicons name="reload" size={14} color={colors.surface.white} />
+                <Text style={styles.retryBtnText}>पुनः प्रयास करें / Retry</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleUseOriginal} style={styles.bypassBtn}>
+                <Text style={styles.bypassBtnText}>मूल फ़ोटो रखें / Keep Original</Text>
+              </TouchableOpacity>
+            </View>
           </View>
+        ) : (
+          /* Progress Bar & Status Text */
+          <View style={styles.progressSection}>
+            <View style={styles.progressHeader}>
+              <Text style={styles.statusTextPrimary}>{t(statusKey)}</Text>
+              <Text style={styles.percentText}>{percent}%</Text>
+            </View>
 
-          <View style={styles.progressBarTrack}>
-            <Animated.View
-              style={[
-                styles.progressBarFill,
-                {
-                  width: progressAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: ['0%', '100%'],
-                  }),
-                },
-              ]}
-            />
+            <View style={styles.progressBarTrack}>
+              <Animated.View
+                style={[
+                  styles.progressBarFill,
+                  {
+                    width: progressAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['0%', '100%'],
+                    }),
+                  },
+                ]}
+              />
+            </View>
           </View>
-        </View>
+        )}
 
         {/* 3 Sequential Step Chips */}
         <View style={styles.chipsSection}>
           {steps.map((s) => {
             const stepDone = isDone || currentStep > s.id;
-            const stepActive = !isDone && currentStep === s.id;
+            const stepActive = !isDone && !errorMessage && currentStep === s.id;
 
             return (
               <View
@@ -191,7 +243,7 @@ export default function AIEnhance({ route, navigation }) {
         <PrimaryButton
           title={buttonTitle}
           arrow={true}
-          disabled={!isDone}
+          disabled={!isDone && !errorMessage}
           onPress={handleNext}
         />
       </View>
@@ -246,10 +298,69 @@ const styles = StyleSheet.create({
   tagSuccess: {
     backgroundColor: colors.status.green,
   },
+  tagError: {
+    backgroundColor: colors.status.amber,
+  },
   liveTagText: {
     color: colors.surface.white,
     fontSize: 11,
     fontWeight: '700',
+  },
+  errorCard: {
+    backgroundColor: '#FFF8F4',
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#F8D7C8',
+    marginBottom: 16,
+  },
+  errorHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 6,
+  },
+  errorTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.navy.deep,
+  },
+  errorDescription: {
+    fontSize: 12,
+    color: colors.text.muted,
+    lineHeight: 17,
+    marginBottom: 12,
+  },
+  errorActionsRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  retryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: colors.primary.rust,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  retryBtnText: {
+    color: colors.surface.white,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  bypassBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: '#F0EDE8',
+  },
+  bypassBtnText: {
+    color: colors.navy.deep,
+    fontSize: 12,
+    fontWeight: '600',
   },
   progressSection: {
     backgroundColor: colors.surface.white,

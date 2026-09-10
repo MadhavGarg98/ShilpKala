@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   SafeAreaView,
   View,
@@ -8,6 +8,7 @@ import {
   Linking,
   Platform,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
@@ -24,21 +25,25 @@ export default function CameraCapture({ navigation }) {
   const [permission, requestPermission] = useCameraPermissions();
   const [facing, setFacing] = useState('back');
   const [isLowLight, setIsLowLight] = useState(false);
+  const [isCameraReady, setIsCameraReady] = useState(false);
+  const [isCapturing, setIsCapturing] = useState(false);
   const cameraRef = useRef(null);
   const { t, currentLanguage } = useTranslation();
 
-  // Fallback if permissions are not granted yet
-  if (!permission) {
-    return (
-      <SafeAreaView style={styles.darkContainer}>
-        <View style={styles.permCenter}>
-          <Text style={styles.permTitle}>...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
+  // 1. Visible console.log of permission status on mount and when it changes
+  useEffect(() => {
+    console.log('[CameraCapture] Camera permission status on mount/change:', JSON.stringify(permission));
+  }, [permission]);
 
-  if (!permission.granted) {
+  // Reset camera ready state if facing changes
+  useEffect(() => {
+    setIsCameraReady(false);
+  }, [facing]);
+
+  // 2. Strict permission check: if permission is null (not yet requested/loaded)
+  // or false (denied), render the bilingual permission screen INSTEAD of CameraView.
+  // Never render CameraView optimistically before permission is confirmed granted.
+  if (!permission || !permission.granted) {
     return (
       <PermissionFallback
         type="camera"
@@ -49,29 +54,52 @@ export default function CameraCapture({ navigation }) {
   }
 
   const handleCapture = async () => {
-    try {
-      if (cameraRef.current && cameraRef.current.takePictureAsync) {
-        const photo = await cameraRef.current.takePictureAsync({
-          quality: 0.85,
-          skipProcessing: false,
-        });
-        if (photo?.uri) {
-          navigation.navigate('AIEnhance', { imageUri: photo.uri });
-          return;
-        }
-      }
-    } catch (err) {
-      console.warn('Camera capture error, falling back to sample image:', err);
-    }
-    // Fallback sample craft image if web or mock camera
-    navigation.navigate('AIEnhance', {
-      imageUri: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&q=80',
+    const isRefAvailable = Boolean(cameraRef.current);
+    console.log('[CameraCapture] Shutter pressed. Diagnostic status:', {
+      isCameraReady,
+      isRefAvailable,
+      permissionGranted: permission?.granted,
+      facing,
     });
+
+    if (!isCameraReady || !isRefAvailable) {
+      console.warn('[CameraCapture] Capture aborted: cameraRef is not set or camera is not ready yet.');
+      return;
+    }
+
+    if (isCapturing) return;
+
+    try {
+      setIsCapturing(true);
+      console.log('[CameraCapture] Calling cameraRef.current.takePictureAsync({ quality: 0.85 })...');
+      const photo = await cameraRef.current.takePictureAsync({
+        quality: 0.85,
+        skipProcessing: false,
+      });
+
+      console.log('[CameraCapture] takePictureAsync succeeded with result:', photo);
+
+      if (photo?.uri) {
+        navigation.navigate('AIEnhance', { imageUri: photo.uri });
+        return;
+      }
+
+      throw new Error('takePictureAsync completed but did not return a valid photo.uri');
+    } catch (err) {
+      console.error('[CameraCapture] takePictureAsync failed. Full error object:', err);
+      // Fallback sample craft image if web or mock camera
+      navigation.navigate('AIEnhance', {
+        imageUri: require('../../../assets/images/products/banarasi-saree.jpg'),
+      });
+    } finally {
+      setIsCapturing(false);
+    }
   };
 
+  // 3. Updated ImagePicker to use ['images'] array instead of deprecated MediaTypeOptions
   const handlePickGallery = async () => {
     const res = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
       quality: 0.85,
     });
@@ -82,103 +110,131 @@ export default function CameraCapture({ navigation }) {
 
   return (
     <View style={styles.darkContainer}>
+      {/* 1. Self-closing CameraView with zero children, onMountError, and onCameraReady logging */}
       <CameraView
         ref={cameraRef}
         style={StyleSheet.absoluteFillObject}
         facing={facing}
-      >
-        <SafeAreaView style={styles.cameraOverlay}>
-          {/* Top Bar with Back and Lighting Pill */}
-          <View style={styles.topControls}>
-            <TouchableOpacity
-              onPress={() => navigation.goBack()}
-              style={styles.circleIconBtn}
-            >
-              <Ionicons name="close" size={24} color={colors.surface.white} />
-            </TouchableOpacity>
+        mode="picture"
+        onMountError={(error) => {
+          console.error('[CameraCapture] CameraView onMountError (full object):', error?.message || error, error);
+          setIsCameraReady(false);
+        }}
+        onCameraReady={() => {
+          console.log('[CameraCapture] onCameraReady fired: camera sensor ready and preview stream active.');
+          setIsCameraReady(true);
+        }}
+      />
 
-            {/* Lighting Status Pill */}
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => setIsLowLight(!isLowLight)}
+      {/* 2. Top Bar Overlay (Back, Light Pill, Camera Flip) */}
+      <View style={styles.topControlsOverlay} pointerEvents="box-none">
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.circleIconBtn}
+          accessibilityLabel="Go back"
+        >
+          <Ionicons name="close" size={24} color={colors.surface.white} />
+        </TouchableOpacity>
+
+        {/* Lighting Status Pill */}
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => setIsLowLight(!isLowLight)}
+          style={[
+            styles.lightPill,
+            isLowLight ? styles.lightPillAmber : styles.lightPillGreen,
+          ]}
+        >
+          <Ionicons
+            name={isLowLight ? 'warning' : 'sunny'}
+            size={14}
+            color={isLowLight ? colors.status.amber : colors.status.green}
+          />
+          <Text
+            style={[
+              styles.lightPillText,
+              isLowLight ? styles.textAmber : styles.textGreen,
+            ]}
+          >
+            {isLowLight ? t('lowLightWarning') : t('naturalLightOk')}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => setFacing(facing === 'back' ? 'front' : 'back')}
+          style={styles.circleIconBtn}
+          accessibilityLabel="Flip camera"
+        >
+          <Ionicons name="camera-reverse" size={22} color={colors.surface.white} />
+        </TouchableOpacity>
+      </View>
+
+      {/* 3. Viewfinder Overlay (Corner Bracket Guides & Instruction Badge) */}
+      <View style={styles.viewfinderOverlay} pointerEvents="none">
+        <View style={styles.viewfinderCenter}>
+          <View style={[styles.cornerBracket, styles.bracketTopLeft]} />
+          <View style={[styles.cornerBracket, styles.bracketTopRight]} />
+          <View style={[styles.cornerBracket, styles.bracketBottomLeft]} />
+          <View style={[styles.cornerBracket, styles.bracketBottomRight]} />
+
+          {/* Center Hint */}
+          <View style={styles.instructionBadge}>
+            <Text style={styles.instructionText}>
+              {t('cameraInstruction')}
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* 4. Bottom Controls Overlay (Gallery, Shutter Button, Light/Help) */}
+      <View style={styles.bottomControlsOverlay} pointerEvents="box-none">
+        {/* Gallery Picker */}
+        <TouchableOpacity
+          onPress={handlePickGallery}
+          style={styles.galleryButton}
+          accessibilityLabel="Gallery"
+        >
+          <Ionicons name="images" size={24} color={colors.surface.white} />
+          <Text style={styles.galleryText}>{t('gallery')}</Text>
+        </TouchableOpacity>
+
+        {/* Shutter Capture Button (Disabled/loading until camera is confirmed ready) */}
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={handleCapture}
+          disabled={!isCameraReady || isCapturing}
+          style={[
+            styles.shutterOuter,
+            (!isCameraReady || isCapturing) && styles.shutterDisabled,
+          ]}
+          accessibilityLabel="Capture"
+        >
+          {isCapturing ? (
+            <ActivityIndicator size="small" color={colors.primary.rust} />
+          ) : (
+            <View
               style={[
-                styles.lightPill,
-                isLowLight ? styles.lightPillAmber : styles.lightPillGreen,
+                styles.shutterInner,
+                !isCameraReady && styles.shutterInnerDisabled,
               ]}
-            >
-              <Ionicons
-                name={isLowLight ? 'warning' : 'sunny'}
-                size={14}
-                color={isLowLight ? colors.status.amber : colors.status.green}
-              />
-              <Text
-                style={[
-                  styles.lightPillText,
-                  isLowLight ? styles.textAmber : styles.textGreen,
-                ]}
-              >
-                {isLowLight ? t('lowLightWarning') : t('naturalLightOk')}
-              </Text>
-            </TouchableOpacity>
+            />
+          )}
+        </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={() => setFacing(facing === 'back' ? 'front' : 'back')}
-              style={styles.circleIconBtn}
-            >
-              <Ionicons name="camera-reverse" size={22} color={colors.surface.white} />
-            </TouchableOpacity>
-          </View>
-
-          {/* Viewfinder Center with Corner Bracket Guides */}
-          <View style={styles.viewfinderCenter}>
-            <View style={[styles.cornerBracket, styles.bracketTopLeft]} />
-            <View style={[styles.cornerBracket, styles.bracketTopRight]} />
-            <View style={[styles.cornerBracket, styles.bracketBottomLeft]} />
-            <View style={[styles.cornerBracket, styles.bracketBottomRight]} />
-
-            {/* Center Hint */}
-            <View style={styles.instructionBadge}>
-              <Text style={styles.instructionText}>
-                {t('cameraInstruction')}
-              </Text>
-            </View>
-          </View>
-
-          {/* Bottom Controls */}
-          <View style={styles.bottomControls}>
-            {/* Gallery Picker */}
-            <TouchableOpacity
-              onPress={handlePickGallery}
-              style={styles.galleryButton}
-            >
-              <Ionicons name="images" size={24} color={colors.surface.white} />
-              <Text style={styles.galleryText}>{t('gallery')}</Text>
-            </TouchableOpacity>
-
-            {/* Shutter Capture Button */}
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={handleCapture}
-              style={styles.shutterOuter}
-            >
-              <View style={styles.shutterInner} />
-            </TouchableOpacity>
-
-            {/* Light Switch / Help Button */}
-            <TouchableOpacity
-              onPress={() => setIsLowLight(!isLowLight)}
-              style={styles.helpButton}
-            >
-              <Ionicons
-                name={isLowLight ? 'flash-outline' : 'bulb-outline'}
-                size={22}
-                color={colors.surface.white}
-              />
-              <Text style={styles.helpText}>Light</Text>
-            </TouchableOpacity>
-          </View>
-        </SafeAreaView>
-      </CameraView>
+        {/* Light Switch / Help Button */}
+        <TouchableOpacity
+          onPress={() => setIsLowLight(!isLowLight)}
+          style={styles.helpButton}
+          accessibilityLabel="Light toggle"
+        >
+          <Ionicons
+            name={isLowLight ? 'flash-outline' : 'bulb-outline'}
+            size={22}
+            color={colors.surface.white}
+          />
+          <Text style={styles.helpText}>Light</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -292,17 +348,25 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
   },
-  cameraOverlay: {
-    flex: 1,
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  topControls: {
+  topControlsOverlay: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 52 : 36,
+    left: 16,
+    right: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: 8,
+    zIndex: 10,
+  },
+  viewfinderOverlay: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 5,
   },
   circleIconBtn: {
     width: 44,
@@ -392,11 +456,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
-  bottomControls: {
+  bottomControlsOverlay: {
+    position: 'absolute',
+    bottom: Platform.OS === 'ios' ? 44 : 28,
+    left: 16,
+    right: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    paddingBottom: 24,
+    zIndex: 10,
   },
   galleryButton: {
     alignItems: 'center',
@@ -423,6 +491,13 @@ const styles = StyleSheet.create({
     height: 60,
     borderRadius: 30,
     backgroundColor: colors.surface.white,
+  },
+  shutterDisabled: {
+    opacity: 0.45,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
+  },
+  shutterInnerDisabled: {
+    backgroundColor: 'rgba(255, 255, 255, 0.35)',
   },
   helpButton: {
     alignItems: 'center',
