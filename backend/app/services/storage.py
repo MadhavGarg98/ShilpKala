@@ -31,6 +31,7 @@ class StorageService:
         parts = clean_key.split("/")
         if any(part in {"", ".", ".."} or not re.fullmatch(r"[A-Za-z0-9._-]+", part) for part in parts):
             raise ValueError("Invalid storage key path.")
+        # lgtm[py/path-injection] -- clean_key is validated and path is constrained to base_dir.
         target_path = (self.base_dir / clean_key).resolve()
         if target_path != self._base_dir_resolved and self._base_dir_resolved not in target_path.parents:
             raise ValueError("Invalid storage key path.")
@@ -59,10 +60,12 @@ class StorageService:
         target_path.parent.mkdir(parents=True, exist_ok=True)
 
         if isinstance(file_obj, bytes):
+            # lgtm[py/path-injection] -- target_path is normalized and constrained in _resolve_storage_path.
             with open(target_path, "wb") as f:
                 f.write(file_obj)
         else:
             file_obj.seek(0)
+            # lgtm[py/path-injection] -- target_path is normalized and constrained in _resolve_storage_path.
             with open(target_path, "wb") as f:
                 shutil.copyfileobj(file_obj, f)
 
