@@ -1,6 +1,7 @@
 import os
 import shutil
 import logging
+import re
 from pathlib import Path
 from typing import BinaryIO, Union
 from app.config import settings
@@ -24,7 +25,12 @@ class StorageService:
         self.base_dir.mkdir(parents=True, exist_ok=True)
 
     def _resolve_storage_path(self, key: str) -> Path:
-        clean_key = key.lstrip("/\\")
+        clean_key = key.lstrip("/\\").replace("\\", "/")
+        if not clean_key:
+            raise ValueError("Invalid storage key path.")
+        parts = clean_key.split("/")
+        if any(part in {"", ".", ".."} or not re.fullmatch(r"[A-Za-z0-9._-]+", part) for part in parts):
+            raise ValueError("Invalid storage key path.")
         target_path = (self.base_dir / clean_key).resolve()
         if target_path != self._base_dir_resolved and self._base_dir_resolved not in target_path.parents:
             raise ValueError("Invalid storage key path.")
