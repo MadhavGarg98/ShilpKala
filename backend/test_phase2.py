@@ -22,7 +22,7 @@ from app.main import app
 from app.db.session import Base, engine
 from app.services.voice_cache import DEMO_VOICE_PHRASES, LANGUAGE_CODE_MAP
 
-def run_tests():
+def run_tests():    
     print("=" * 60)
     print("RUNNING SHILPKALA PHASE 2 VERIFICATION SUITE")
     print("Voice Pipeline (Sarvam primary) + AI Listing Generation")
@@ -98,7 +98,7 @@ def run_tests():
             assert res.status_code == 200, f"STT failed for {short_lang}: {res.text}"
             stt_data = res.json()
             assert len(stt_data["transcript"]) > 0
-            assert stt_data["source"] in ["sarvam", "bhashini", "whisper_fallback", "demo_cache"]
+            assert stt_data["source"] in ["groq_whisper", "sarvam", "bhashini", "whisper_fallback", "demo_cache"]
             print(f"[OK] STT [{short_lang.upper()}] ({bcp47}): source={stt_data['source']}, latency={elapsed_ms:.1f}ms")
             print(f"     Transcript: {stt_data['transcript'][:60]}...")
 

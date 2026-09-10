@@ -107,7 +107,7 @@ def test_2_real_voice_transcription():
     print(f"    Provider Source: {data_hi['source']}")
     print(f"    Processing Time: {data_hi['processing_time_ms']}ms")
     assert len(data_hi["transcript"]) > 0
-    assert data_hi["source"] in ["sarvam", "bhashini", "whisper_fallback"]
+    assert data_hi["source"] in ["groq_whisper", "sarvam", "bhashini", "whisper_fallback"]
 
     # Test Language 2: Tamil
     print("\n  Sub-test 2B: Tamil Voice Transcription (ta-IN)...")
