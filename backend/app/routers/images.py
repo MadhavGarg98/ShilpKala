@@ -129,8 +129,16 @@ async def describe_product_image(
             craft_type=craft_type,
             image_url=image_url
         )
+        
+        # Add response fingerprint logging for debugging
+        response_hash = hash(str(res))
+        logger.info(f"DESCRIBE RESPONSE HASH: {response_hash} for cutout_id: {cutout_id}")
+        logger.info(f"RESPONSE TITLE: {res.get('title', 'N/A')}")
+        logger.info(f"RESPONSE SOURCE: {res.get('source', 'N/A')}")
+        
         return ImageDescriptionResponse(**res)
     except Exception as e:
+        logger.error(f"Vision description failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Vision description failed: {str(e)}")
 
 @router.post(

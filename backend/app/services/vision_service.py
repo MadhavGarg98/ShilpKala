@@ -42,29 +42,36 @@ class VisionDescriptorService:
 
         if processor is not None and model is not None:
             try:
+                logger.info("Using BLIP model for caption generation")
                 inputs = processor(pil_image, return_tensors="pt")
                 out = model.generate(**inputs, max_new_tokens=45)
                 caption = processor.decode(out[0], skip_special_tokens=True).strip()
                 if caption:
+                    logger.info(f"BLIP generated caption: '{caption}'")
                     return caption.capitalize()
             except Exception as blip_err:
                 logger.warning(f"BLIP inference warning: {blip_err}")
+                logger.info("Falling back to YOLO-based detection")
 
-        # Intelligent craft-aware vision fallback
-        # Analyze image with YOLO and color palette
+        # Intelligent vision fallback using actual YOLO detections
+        # Build caption from real detected objects, not hardcoded craft descriptions
+        logger.info("BLIP not available, using YOLO-based object detection for caption generation")
         buf = io.BytesIO()
         pil_image.save(buf, format="JPEG")
         det = object_detector.detect_objects(buf.getvalue(), conf_threshold=0.20)
         labels = [obj["label"].lower() for obj in det.get("objects", [])]
+        logger.info(f"YOLO detected objects: {labels}")
 
-        if any(l in ["bowl", "vase", "pot"] for l in labels):
-            return "Handcrafted Indian terracotta surahi clay pottery with traditional etched pattern"
-        elif any(l in ["bottle", "cup"] for l in labels):
-            return "Hand-hammered traditional brass diya vessel with polished metallic finish"
-        elif any(l in ["handbag", "bed", "couch"] for l in labels):
-            return "Handloom woven textile fabric craft with authentic artisanal zari borders"
+        if labels:
+            # Build caption from actual detected objects
+            unique_labels = list(set(labels))
+            if len(unique_labels) == 1:
+                return f"A {unique_labels[0]}"
+            else:
+                return f"A {', '.join(unique_labels[:-1])} and {unique_labels[-1]}"
         else:
-            return "Handcrafted authentic Indian artisan heritage product made using traditional methods"
+            logger.warning("No specific objects detected, using generic fallback")
+            return "A product item"
 
     def describe_image(
         self,
@@ -101,6 +108,13 @@ class VisionDescriptorService:
         desc = listing_res.get("description_local") or listing_res.get("description_en") or base_caption
         desc_en = listing_res.get("description_en") or desc
 
+        # Determine source for logging
+        source = listing_res.get("source", "blip_llm")
+        if "demo" in source.lower() or "cache" in source.lower():
+            logger.warning(f"⚠️ DEMO CACHE RESPONSE - source: {source}")
+        else:
+            logger.info(f"✓ REAL PIPELINE RESPONSE - source: {source}")
+
         return {
             "caption": base_caption,
             "title": title_local,
@@ -112,7 +126,7 @@ class VisionDescriptorService:
             "suggested_price_max": listing_res.get("suggested_price_max", 1200),
             "is_gi_match": listing_res.get("is_gi_match", False),
             "gi_name": listing_res.get("gi_name"),
-            "source": listing_res.get("source", "blip_llm"),
+            "source": source,
             "processing_time_ms": elapsed_ms,
         }
 

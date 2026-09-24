@@ -28,9 +28,12 @@ export function rnMultipartUpload(url, formData, customHeaders = {}) {
 
     if (xhr.upload) {
       xhr.upload.onprogress = (event) => {
-        if (event.lengthComputable) {
-          const progress = Math.round((event.loaded / event.total) * 100);
+        if (event.lengthComputable && event.total > 0) {
+          const progress = Math.min(100, Math.round((event.loaded / event.total) * 100));
           console.log(`[networkUpload] Upload progress: ${progress}% (${event.loaded}/${event.total} bytes)`);
+        } else if (event.lengthComputable) {
+          // When total is 0 or unknown, show raw loaded bytes without percentage
+          console.log(`[networkUpload] Upload progress: ${event.loaded} bytes (total unknown)`);
         }
       };
     }

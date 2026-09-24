@@ -79,9 +79,10 @@ class ListingGeneratorService:
             )
 
         # ─── FALLBACK: Deterministic multilingual template ───────────
-        logger.info(
-            f"Using high-fidelity template fallback for language: {lang_name} ({short_lang})."
+        logger.warning(
+            f"⚠️ GROQ CALL FAILED OR API KEY MISSING - Using template fallback for language: {lang_name} ({short_lang})."
         )
+        logger.warning(f"⚠️ TEMPLATE FALLBACK TRIGGERED - This means real AI pipeline failed. Transcript: '{transcript[:100]}...'")
         res = self._generate_template_fallback(transcript, short_lang, lang_name, craft_type)
         res["source"] = "template_fallback"
         return res
@@ -282,18 +283,15 @@ Return a STRICT JSON object without any markdown formatting or surrounding text.
             p_min, p_max = 3500, 7800
 
         else:
-            # Default: Handloom / Banarasi Saree
-            title_local = demo_info["title"]
-            title_en = DEMO_VOICE_PHRASES["en"]["title"]
-            desc_en = demo_info["english_desc"]
-            desc_hi = (
-                demo_info.get("transcript", "")
-                if short_lang == "hi"
-                else "बनारसी बुनकरों द्वारा हस्तनिर्मित रेशमी साड़ी। जीआई प्रमाणित पारंपरिक शिल्प।"
-            )
-            gi_name = "Banaras Brocades & Sarees (GI Reg #99)"
-            keywords = demo_info["keywords"]
-            p_min, p_max = 5500, 7200
+            # Default: Generic craft description (NO HARDCODED SAREE)
+            logger.warning(f"No specific craft type matched in transcript: '{transcript}', using generic fallback")
+            title_local = "हस्तनिर्मित पारंपरिक शिल्प उत्पाद"
+            title_en = "Handcrafted Traditional Artisan Product"
+            desc_en = f"Authentic handcrafted artisan product created using traditional methods: {transcript}"
+            desc_hi = f"पारंपरिक विधियों से बनाया गया हस्तनिर्मित शिल्प उत्पाद: {transcript}"
+            gi_name = None
+            keywords = ["Handmade", "Artisan", "Traditional", "Heritage"]
+            p_min, p_max = 2500, 4500
 
         return {
             "title": title_local,
