@@ -281,8 +281,8 @@ Return a STRICT JSON object without any markdown formatting or surrounding text.
             keywords = ["Zardozi", "Embroidery", "Chikankari", "Zari", "Handmade"]
             p_min, p_max = 3500, 7800
 
-        else:
-            # Default: Handloom / Banarasi Saree
+        elif any(w in combined for w in ["साड़ी", "banarasi", "saree", "silk", "katan", "zari"]):
+            # Saree-specific fallback only when saree-related signals are actually present
             title_local = demo_info["title"]
             title_en = DEMO_VOICE_PHRASES["en"]["title"]
             desc_en = demo_info["english_desc"]
@@ -294,11 +294,40 @@ Return a STRICT JSON object without any markdown formatting or surrounding text.
             gi_name = "Banaras Brocades & Sarees (GI Reg #99)"
             keywords = demo_info["keywords"]
             p_min, p_max = 5500, 7200
+        elif any(w in combined for w in ["textile", "fabric", "handloom", "woven", "loom", "कपड़ा", "बुना"]):
+            title_local = "हस्तनिर्मित पारंपरिक हथकरघा वस्त्र शिल्प"
+            title_en = "Handcrafted Traditional Handloom Textile"
+            desc_en = (
+                "Authentic handcrafted handloom textile made with traditional weaving techniques, "
+                f"featuring artisanal detailing: {transcript}"
+            )
+            desc_hi = (
+                "पारंपरिक बुनाई तकनीकों से तैयार हस्तनिर्मित हथकरघा वस्त्र। "
+                f"कारीगरों की सूक्ष्म कारीगरी सहित: {transcript}"
+            )
+            gi_name = None
+            keywords = ["Handloom", "Textile", "Woven", "Artisan", "Traditional"]
+            p_min, p_max = 2500, 5200
+        else:
+            # Generic cross-craft fallback (non-demo, non-Banarasi default)
+            title_local = "हस्तनिर्मित पारंपरिक भारतीय शिल्प उत्पाद"
+            title_en = "Handcrafted Traditional Indian Artisan Product"
+            desc_en = (
+                "Authentic handcrafted Indian artisan product made using traditional techniques "
+                f"with distinctive handcrafted character: {transcript}"
+            )
+            desc_hi = (
+                "पारंपरिक तकनीकों से बनाया गया प्रामाणिक हस्तनिर्मित भारतीय शिल्प उत्पाद, "
+                f"जिसमें कारीगर की विशिष्ट पहचान झलकती है: {transcript}"
+            )
+            gi_name = None
+            keywords = ["Handmade", "Artisan", "Traditional", "IndianCraft", "Heritage"]
+            p_min, p_max = 1800, 4200
 
         return {
             "title": title_local,
             "title_english": title_en,
-            "description_local": transcript if len(transcript) > 5 else demo_info["transcript"],
+            "description_local": desc_hi if short_lang == "hi" else transcript,
             "description_hi": desc_hi,
             "description_en": desc_en,
             "is_gi_match": True,
@@ -312,4 +341,3 @@ Return a STRICT JSON object without any markdown formatting or surrounding text.
 
 
 listing_generator = ListingGeneratorService()
-
