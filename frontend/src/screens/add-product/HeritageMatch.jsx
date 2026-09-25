@@ -84,9 +84,7 @@ export default function HeritageMatch({ route, navigation }) {
                 <Ionicons name="ribbon" size={26} color={colors.surface.white} />
               </View>
               <View style={styles.goldBannerText}>
-                <Text style={styles.giTagBadge}>
-                  भारत सरकार जीआई पंजीकृत • GI CERTIFIED #99
-                </Text>
+                <Text style={styles.giTagBadge}>{t('hm.giCertBadge')}</Text>
                 <Text style={styles.giCelebrationTitle}>
                   {t('giCelebrationTitle')}
                 </Text>
@@ -169,15 +167,11 @@ export default function HeritageMatch({ route, navigation }) {
             <View style={styles.neutralFeatureList}>
               <View style={styles.featureRow}>
                 <Ionicons name="checkmark-circle" size={16} color={colors.status.green} />
-                <Text style={styles.featureText}>
-                  सीधा कारीगर-खरीदार संवाद • Direct maker connection
-                </Text>
+                <Text style={styles.featureText}>{t('hm.featureDirect')}</Text>
               </View>
               <View style={styles.featureRow}>
                 <Ionicons name="checkmark-circle" size={16} color={colors.status.green} />
-                <Text style={styles.featureText}>
-                  शिल्पकला प्रामाणिकता बैज • Artisan verified mark
-                </Text>
+                <Text style={styles.featureText}>{t('hm.featureVerified')}</Text>
               </View>
             </View>
           </View>

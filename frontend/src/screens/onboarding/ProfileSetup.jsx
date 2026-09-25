@@ -26,10 +26,10 @@ export default function ProfileSetup({ navigation }) {
   const currentArtisan = useAppStore((state) => state.artisanProfile);
   const { t, currentLanguage } = useTranslation();
 
-  const [name, setName] = useState('राम निवास (Ram Niwas)');
+  const [name, setName] = useState(t('settings.voiceMockName'));
   const [craftTypes, setCraftTypes] = useState([]);
   const [selectedCraftId, setSelectedCraftId] = useState('1');
-  const [location, setLocation] = useState('वाराणसी, उत्तर प्रदेश (Varanasi, UP)');
+  const [location, setLocation] = useState(t('home.location'));
   const [hasGovtId, setHasGovtId] = useState(true);
   const [loading, setLoading] = useState(false);
   const [fetchingCrafts, setFetchingCrafts] = useState(true);
@@ -49,7 +49,7 @@ export default function ProfileSetup({ navigation }) {
   }, []);
 
   const handleVoiceTranscribeName = (transcribedName) => {
-    setName(transcribedName || 'राम निवास (Ram Niwas)');
+    setName(transcribedName || t('settings.voiceMockName'));
   };
 
   const handleComplete = async () => {
@@ -60,7 +60,7 @@ export default function ProfileSetup({ navigation }) {
       name,
       craftType: selectedCraft
         ? (t(selectedCraft.labelKey) || `${selectedCraft.labelHindi} (${selectedCraft.labelEnglish})`)
-        : 'हथकरघा बुनाई (Handloom Weaving)',
+        : t('ps.craftFallback'),
       location,
       artisanIdStatus: hasGovtId ? 'Verified' : 'Pending',
       isProfileComplete: true,
@@ -75,15 +75,9 @@ export default function ProfileSetup({ navigation }) {
     });
   };
 
-  const buttonTitle =
-    currentLanguage === 'en'
-      ? 'Complete Profile & Enter Storefront'
-      : `${t('completeProfileBtn')} / Complete Profile`;
+  const buttonTitle = t('ps.completeBtn');
 
-  const nameLabelText =
-    currentLanguage === 'en'
-      ? 'Artisan Name'
-      : `${t('artisanNameLabel')} / Artisan Name`;
+  const nameLabelText = t('ps.artisanNameLabel');
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -124,7 +118,7 @@ export default function ProfileSetup({ navigation }) {
             />
             <VoiceInputButton
               size={42}
-              mockText="राम निवास (Ram Niwas)"
+              mockText={t('settings.voiceMockName')}
               onTranscribed={handleVoiceTranscribeName}
             />
           </View>

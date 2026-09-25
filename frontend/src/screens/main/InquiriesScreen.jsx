@@ -46,13 +46,13 @@ export default function InquiriesScreen() {
   const getStatusStyle = (status) => {
     switch (status) {
       case 'unread':
-        return { bg: '#FFF2EB', text: colors.primary.rust, label: 'नई • New' };
+        return { bg: '#FFF2EB', text: colors.primary.rust, labelKey: 'inq.status.new' };
       case 'read':
-        return { bg: '#F3EDE2', text: colors.navy.deep, label: 'पढ़ा • Read' };
+        return { bg: '#F3EDE2', text: colors.navy.deep, labelKey: 'inq.status.read' };
       case 'replied':
-        return { bg: '#F3FAF5', text: colors.status.green, label: 'जवाब दिया • Replied' };
+        return { bg: '#F3FAF5', text: colors.status.green, labelKey: 'inq.status.replied' };
       default:
-        return { bg: '#F3EDE2', text: colors.text.muted, label: status };
+        return { bg: '#F3EDE2', text: colors.text.muted, labelKey: null, label: status };
     }
   };
 
@@ -63,12 +63,7 @@ export default function InquiriesScreen() {
       await sendInquiryReply(inquiryId, { message: replyText });
       setReplyText('');
       setExpandedId(null);
-      Alert.alert(
-        currentLanguage === 'en' ? 'Reply Sent' : 'जवाब भेजा गया',
-        currentLanguage === 'en'
-          ? 'Your reply has been sent to the buyer.'
-          : 'खरीदार को आपका जवाब भेज दिया गया है।'
-      );
+      Alert.alert(t('inq.replySentTitle'), t('inq.replySentBody'));
     } catch (err) {
       console.error('Reply error:', err);
     } finally {
@@ -87,13 +82,13 @@ export default function InquiriesScreen() {
       read: inquiries.filter((i) => i.status === 'read').length,
       replied: inquiries.filter((i) => i.status === 'replied').length,
     };
-    const labels = {
-      all: 'सभी · All',
-      unread: 'नई · New',
-      read: 'पढ़ा · Read',
-      replied: 'जवाब · Replied',
+    const labelKeys = {
+      all: 'inq.filter.all',
+      unread: 'inq.filter.unread',
+      read: 'inq.filter.read',
+      replied: 'inq.filter.replied',
     };
-    return `${labels[filter]} (${counts[filter]})`;
+    return `${t(labelKeys[filter])} (${counts[filter]})`;
   };
 
   const renderInquiryCard = ({ item }) => {
@@ -126,7 +121,7 @@ export default function InquiriesScreen() {
           <View style={styles.headerRight}>
             <View style={[styles.statusPill, { backgroundColor: statusStyle.bg }]}>
               <Text style={[styles.statusPillText, { color: statusStyle.text }]}>
-                {statusStyle.label}
+                {statusStyle.labelKey ? t(statusStyle.labelKey) : statusStyle.label}
               </Text>
             </View>
             <Text style={styles.timestamp}>{item.timestamp}</Text>
@@ -141,10 +136,7 @@ export default function InquiriesScreen() {
               style={styles.productThumb}
             />
             <Text style={styles.productRefTitle} numberOfLines={1}>
-              {t(product.titleKey) ||
-                (currentLanguage === 'en'
-                  ? product.titleEnglish
-                  : product.titleHindi)}
+              {t(product.titleKey) || product.titleEnglish || product.titleHindi}
             </Text>
             <Text style={styles.productRefPrice}>
               ₹{product.price?.toLocaleString('en-IN')}
@@ -155,10 +147,7 @@ export default function InquiriesScreen() {
         {/* Message */}
         <View style={styles.messageBlock}>
           <Text style={styles.messageText}>
-            {t(item.messageKey) ||
-              (currentLanguage === 'en'
-                ? item.messageOriginal
-                : item.messageHindi)}
+            {t(item.messageKey) || item.messageOriginal || item.messageHindi}
           </Text>
           {currentLanguage !== 'en' && (
             <Text style={styles.messageSecondary}>{item.messageOriginal}</Text>
@@ -184,22 +173,18 @@ export default function InquiriesScreen() {
                 style={styles.replyInput}
                 value={replyText}
                 onChangeText={setReplyText}
-                placeholder={
-                  currentLanguage === 'en'
-                    ? 'Type your reply...'
-                    : 'अपना जवाब टाइप करें...'
-                }
+                placeholder={t('inq.replyPlaceholder')}
                 placeholderTextColor={colors.text.muted}
                 multiline
               />
               <VoiceInputButton
                 size={36}
-                mockText="हां, थोक मूल्य ₹5,800 प्रति पीस है। 50 पीस के लिए विशेष छूट उपलब्ध है।"
+                mockText={t('inq.voiceReplyMock')}
                 onTranscribed={handleVoiceReply}
               />
             </View>
             <PrimaryButton
-              title={currentLanguage === 'en' ? 'Send Reply' : 'जवाब भेजें'}
+              title={t('inq.sendReply')}
               loading={replying}
               disabled={!replyText.trim()}
               onPress={() => handleReply(item.id)}
@@ -211,11 +196,7 @@ export default function InquiriesScreen() {
         {item.status === 'replied' && (
           <View style={styles.repliedNote}>
             <Ionicons name="checkmark-circle" size={14} color={colors.status.green} />
-            <Text style={styles.repliedNoteText}>
-              {currentLanguage === 'en'
-                ? 'You have replied to this inquiry'
-                : 'आपने इस पूछताछ का जवाब दे दिया है'}
-            </Text>
+            <Text style={styles.repliedNoteText}>{t('inq.repliedNote')}</Text>
           </View>
         )}
       </TouchableOpacity>
@@ -225,25 +206,16 @@ export default function InquiriesScreen() {
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
       <Ionicons name="chatbubbles-outline" size={56} color="#D8D2C8" />
-      <Text style={styles.emptyTitle}>
-        {currentLanguage === 'en'
-          ? 'No Inquiries Yet'
-          : 'अभी कोई पूछताछ नहीं'}
-      </Text>
-      <Text style={styles.emptyDesc}>
-        {currentLanguage === 'en'
-          ? 'When buyers send inquiries about your products, they will appear here.'
-          : 'जब खरीदार आपके उत्पादों के बारे में पूछताछ करेंगे, वे यहां दिखाई देंगी।'}
-      </Text>
+      <Text style={styles.emptyTitle}>{t('inq.emptyTitle')}</Text>
+      <Text style={styles.emptyDesc}>{t('inq.emptyDesc')}</Text>
     </View>
   );
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <TabRootHeader
-        titleHindi="ग्राहक पूछताछ"
-        titleEnglish="Inquiries"
-        subtitle="सीधी खरीदार बातचीत • Direct Buyer Inquiries"
+        title={t('inqTab.headerTitle')}
+        subtitle={t('inqTab.headerSubtitle')}
       />
 
       {/* Filter Chips */}

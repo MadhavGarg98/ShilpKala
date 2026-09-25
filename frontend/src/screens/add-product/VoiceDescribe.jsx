@@ -87,7 +87,7 @@ export default function VoiceDescribe({ route, navigation }) {
         }
       } catch (err) {
         console.error('[VoiceDescribe] Voice transcription error:', err);
-        setErrorMessage(`ऑडियो ट्रांसक्रिप्शन त्रुटि: ${err.message || 'Connection failed'}`);
+        setErrorMessage(`${t('vd.transcribeError')}: ${err.message || 'Connection failed'}`);
       } finally {
         setIsProcessing(false);
       }
@@ -132,7 +132,7 @@ export default function VoiceDescribe({ route, navigation }) {
           setTranscriptionSource(result.source || 'demo_cache');
         } catch (e) {
           console.error('[VoiceDescribe] Recording fallback failed:', e);
-          setErrorMessage('माइक्रोफ़ोन अनुपलब्ध है। कृपया नीचे लिखकर विवरण दें।');
+          setErrorMessage(t('vd.micUnavailable'));
           setIsTypingMode(true);
         } finally {
           setIsProcessing(false);
@@ -156,10 +156,7 @@ export default function VoiceDescribe({ route, navigation }) {
     });
   };
 
-  const buttonTitle =
-    currentLanguage === 'en'
-      ? 'Review Listing'
-      : `${t('continueToReview')} / Review Listing`;
+  const buttonTitle = t('continueToReview');
 
   const hasContent = transcribedText.trim().length > 0;
 
@@ -242,10 +239,10 @@ export default function VoiceDescribe({ route, navigation }) {
               )}
               <Text style={styles.voiceTriggerText}>
                 {isProcessing
-                  ? 'ध्वनि विश्लेषण जारी... / Transcribing...'
+                  ? t('vd.transcribing')
                   : isRecording
-                  ? 'बोलना समाप्त करें (टैप करें) / Tap to Finish'
-                  : 'बोलना शुरू करें / Tap to Speak'}
+                  ? t('vd.tapToFinish')
+                  : t('vd.tapToSpeak')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -259,7 +256,7 @@ export default function VoiceDescribe({ route, navigation }) {
                 onPress={() => setIsTypingMode(true)}
                 style={styles.errorActionBtn}
               >
-                <Text style={styles.errorActionText}>टाइप करें / Type</Text>
+                <Text style={styles.errorActionText}>{t('vd.typeNow')}</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -275,7 +272,7 @@ export default function VoiceDescribe({ route, navigation }) {
                   ]}
                 />
                 <Text style={styles.transcriptLabel}>
-                  {isTypingMode ? 'लिखित विवरण • Artisan Description' : t('liveTranscriptLabel')}
+                  {isTypingMode ? t('vd.typingModeLabel') : t('liveTranscriptLabel')}
                 </Text>
                 {transcriptionSource && !isTypingMode && (
                   <View style={styles.sourceTag}>
@@ -300,7 +297,7 @@ export default function VoiceDescribe({ route, navigation }) {
                 multiline
                 value={transcribedText}
                 onChangeText={setTranscribedText}
-                placeholder="उदा. यह शुद्ध कातून सिल्क बनारसी साड़ी है, जिसमें पारंपरिक ज़री काम है..."
+                placeholder={t('vd.typingPlaceholder')}
                 placeholderTextColor={colors.text.muted}
                 autoFocus
               />
@@ -313,7 +310,7 @@ export default function VoiceDescribe({ route, navigation }) {
               >
                 {hasContent
                   ? transcribedText
-                  : 'माइक दबाएं और अपनी भाषा में उत्पाद के बारे में बताएं। शब्द यहाँ लाइव दिखेंगे...'}
+                  : t('vd.micPrompt')}}
               </Text>
             )}
           </View>
@@ -330,7 +327,7 @@ export default function VoiceDescribe({ route, navigation }) {
             />
             <Text style={styles.typeInsteadText}>
               {isTypingMode
-                ? 'माइक मोड पर वापस जाएं / Back to Voice'
+                ? t('vd.backToVoice')
                 : `${t('typeInstead')} (Keyboard)`}
             </Text>
           </TouchableOpacity>

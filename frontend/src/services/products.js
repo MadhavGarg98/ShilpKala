@@ -1,4 +1,5 @@
 import { useAppStore } from '../store/useAppStore';
+import { t } from '../i18n';
 
 const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
@@ -14,8 +15,9 @@ export async function createListing(data) {
   
   const newProduct = {
     id: `p${Date.now()}`,
-    titleHindi: data.titleHindi || 'नया हस्तशिल्प उत्पाद',
-    titleEnglish: data.titleEnglish || 'New Handcrafted Product',
+    titleHindi: data.titleHindi || t('prod.newTitle', 'hi'),
+    titleKey: data.titleKey || null,
+    titleEnglish: data.titleEnglish || t('prod.newTitle', 'en'),
     price: data.price || 0,
     status: data.status || 'live',
     isGiCertified: data.isGiCertified || false,

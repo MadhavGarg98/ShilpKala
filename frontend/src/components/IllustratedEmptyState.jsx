@@ -4,32 +4,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
 import PrimaryButton from './PrimaryButton';
+import { useTranslation } from '../i18n';
 
 export default function IllustratedEmptyState({
   type = 'products', // 'products' | 'inquiries'
-  titleHindi,
-  titleEnglish,
-  descHindi,
-  descEnglish,
-  buttonTitle,
   onButtonPress,
   style,
 }) {
+  const { t, getSecondary } = useTranslation();
   const isProducts = type === 'products';
-
-  const defaultTitleHi = isProducts
-    ? 'अपनी पहली हस्तशिल्प कला जोड़ें'
-    : 'अभी कोई खरीदार पूछताछ नहीं है';
-  const defaultTitleEn = isProducts
-    ? 'Add your first craft product to get started'
-    : 'No buyer inquiries yet';
-
-  const defaultDescHi = isProducts
-    ? 'अपनी कला का फोटो लें या बोलकर बताएं। एआई तुरंत आपकी लिस्टिंग तैयार करेगा।'
-    : 'जब देश-विदेश के खरीदार आपके शिल्प देखेंगे, उनके संदेश यहाँ दिखाई देंगे।';
-  const defaultDescEn = isProducts
-    ? 'Capture a photo or speak about your craft to publish an authentic listing in seconds.'
-    : 'When buyers across India and abroad discover your crafts, their inquiries will land here.';
+  const scope = isProducts ? 'empty.products' : 'empty.inquiries';
 
   return (
     <View style={[styles.container, style]}>
@@ -52,26 +36,22 @@ export default function IllustratedEmptyState({
       </View>
 
       {/* Title */}
-      <Text style={styles.headingPrimary}>
-        {titleHindi || defaultTitleHi}
-      </Text>
-      <Text style={styles.headingSecondary}>
-        {titleEnglish || defaultTitleEn}
-      </Text>
+      <Text style={styles.headingPrimary}>{t(`${scope}.title`)}</Text>
+      {getSecondary(`${scope}.title`) ? (
+        <Text style={styles.headingSecondary}>{getSecondary(`${scope}.title`)}</Text>
+      ) : null}
 
       {/* Description */}
-      <Text style={styles.description}>
-        {descHindi || defaultDescHi}
-      </Text>
-      <Text style={styles.descriptionSecondary}>
-        {descEnglish || defaultDescEn}
-      </Text>
+      <Text style={styles.description}>{t(`${scope}.desc`)}</Text>
+      {getSecondary(`${scope}.desc`) ? (
+        <Text style={styles.descriptionSecondary}>{getSecondary(`${scope}.desc`)}</Text>
+      ) : null}
 
       {/* Optional CTA Button */}
       {onButtonPress ? (
         <View style={styles.buttonWrapper}>
           <PrimaryButton
-            title={buttonTitle || (isProducts ? 'पहला उत्पाद जोड़ें · Add Product' : 'संदेश भेजें')}
+            title={t(`${scope}.cta`)}
             leadingIcon={isProducts ? 'add-circle-outline' : 'paper-plane-outline'}
             onPress={onButtonPress}
           />

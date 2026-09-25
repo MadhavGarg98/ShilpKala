@@ -183,7 +183,7 @@ export default function AIEnhance({ route, navigation }) {
       }
     } catch (err) {
       console.warn('[AIEnhance] Description generation warning:', err);
-      setDescError(err.message || 'Could not auto-generate description');
+      setDescError(err.message || t('ai.descErrorDefault'));
     } finally {
       setIsGeneratingDesc(false);
     }
@@ -252,10 +252,7 @@ export default function AIEnhance({ route, navigation }) {
     { id: 3, key: 'processingStep3', label: t('processingStep3') },
   ];
 
-  const buttonTitle =
-    currentLanguage === 'en'
-      ? 'Describe with Voice'
-      : `${t('continueToVoice')} / Describe with Voice`;
+  const buttonTitle = t('continueToVoice');
 
   // Conditionally render Multi-Product Detection Bounding Box Picker
   if (showObjectPicker) {
@@ -264,7 +261,7 @@ export default function AIEnhance({ route, navigation }) {
         <StepFlowHeader
           step={2}
           total={3}
-          title={currentLanguage === 'hi' ? 'उत्पाद चुनें • Select Item' : 'Select Craft Item'}
+          title={t('ai.selectItemTitle')}
         />
 
         <ScrollView
@@ -275,16 +272,8 @@ export default function AIEnhance({ route, navigation }) {
           <View style={styles.pickerBanner}>
             <Ionicons name="scan-outline" size={22} color={colors.primary.rust} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.pickerBannerTitle}>
-                {currentLanguage === 'hi'
-                  ? 'फ़ोटो में कई उत्पाद मिले हैं'
-                  : 'Multiple Items Detected'}
-              </Text>
-              <Text style={styles.pickerBannerSub}>
-                {currentLanguage === 'hi'
-                  ? 'जिस उत्पाद को आप अलग करके बेचना चाहते हैं, उस पर टैप करें।'
-                  : 'Tap the specific item you want ShilpKala AI to isolate & enhance.'}
-              </Text>
+              <Text style={styles.pickerBannerTitle}>{t('ai.pickerTitle')}</Text>
+              <Text style={styles.pickerBannerSub}>{t('ai.pickerSub')}</Text>
             </View>
           </View>
 
@@ -315,7 +304,7 @@ export default function AIEnhance({ route, navigation }) {
                 >
                   <View style={[styles.boxBadge, isSelected ? styles.boxBadgeSelected : styles.boxBadgeUnselected]}>
                     <Text style={[styles.boxBadgeText, isSelected && styles.boxBadgeTextSelected]}>
-                      {isSelected ? '✓ ' : ''}{obj.label || `Item ${obj.id + 1}`}
+                      {isSelected ? '✓ ' : ''}{obj.label || t('ai.itemLabel').replace('{n}', obj.id + 1)}
                     </Text>
                   </View>
                 </TouchableOpacity>
@@ -324,9 +313,7 @@ export default function AIEnhance({ route, navigation }) {
           </View>
 
           {/* Horizontal list of detected items */}
-          <Text style={styles.detectedItemsTitle}>
-            {currentLanguage === 'hi' ? 'पहचाने गए उत्पाद • Detected Objects:' : 'Detected Objects:'}
-          </Text>
+          <Text style={styles.detectedItemsTitle}>{t('ai.detectedObjects')}</Text>
           <View style={styles.detectedChipsGrid}>
             {detectedObjects.map((obj) => {
               const isSelected = selectedObject?.id === obj.id;
@@ -350,7 +337,7 @@ export default function AIEnhance({ route, navigation }) {
                       isSelected && styles.objectSelectorTextActive,
                     ]}
                   >
-                    {obj.label || `Item ${obj.id + 1}`}
+                    {obj.label || t('ai.itemLabel').replace('{n}', obj.id + 1)}
                   </Text>
                 </TouchableOpacity>
               );
@@ -362,10 +349,8 @@ export default function AIEnhance({ route, navigation }) {
             <PrimaryButton
               title={
                 selectedObject
-                  ? (currentLanguage === 'hi'
-                      ? `चुने गए '${selectedObject.label}' को अलग करें`
-                      : `Isolate & Enhance '${selectedObject.label}'`)
-                  : 'Enhance Selected Product'
+                  ? t('ai.isolateSelected').replace('{label}', selectedObject.label || '')
+                  : t('ai.enhanceSelected')
               }
               arrow={true}
               onPress={() => runEnhancement(selectedObject?.box_pixels || null)}
@@ -375,11 +360,7 @@ export default function AIEnhance({ route, navigation }) {
               onPress={() => runEnhancement(null)}
               style={styles.enhanceEntireBtn}
             >
-              <Text style={styles.enhanceEntireText}>
-                {currentLanguage === 'hi'
-                  ? 'पूरी फ़ोटो सुधारें • Enhance Entire Photo'
-                  : 'Enhance Entire Photo (No Crop)'}
-              </Text>
+              <Text style={styles.enhanceEntireText}>{t('ai.enhanceEntire')}</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -426,8 +407,8 @@ export default function AIEnhance({ route, navigation }) {
               />
               <Text style={styles.liveTagText}>
                 {isDone
-                  ? (previewMode === 'enhanced' ? '✨ Marketplace Ready' : 'Original Photo')
-                  : (errorMessage ? 'Enhancement Failed' : `${percent}%`)}
+                  ? (previewMode === 'enhanced' ? t('ai.marketplaceReady') : t('ai.originalPhoto'))
+                  : (errorMessage ? t('ai.enhanceFailed') : `${percent}%`)}
               </Text>
             </View>
           </View>
@@ -457,7 +438,7 @@ export default function AIEnhance({ route, navigation }) {
                     previewMode === 'original' && styles.toggleBtnTextActive,
                   ]}
                 >
-                  {currentLanguage === 'hi' ? 'मूल फ़ोटो (Before)' : 'Original (Before)'}
+                  {t('ai.originalBefore')}
                 </Text>
               </TouchableOpacity>
 
@@ -481,7 +462,7 @@ export default function AIEnhance({ route, navigation }) {
                     previewMode === 'enhanced' && styles.toggleBtnTextActive,
                   ]}
                 >
-                  {currentLanguage === 'hi' ? '✨ बाज़ार रेडी (After)' : '✨ Enhanced (After)'}
+                  {t('ai.enhancedAfter')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -493,9 +474,7 @@ export default function AIEnhance({ route, navigation }) {
           <View style={styles.presetSection}>
             <View style={styles.presetHeaderRow}>
               <Ionicons name="color-palette-outline" size={15} color={colors.navy.deep} />
-              <Text style={styles.presetHeaderTitle}>
-                {currentLanguage === 'hi' ? 'बैकड्रॉप स्टाइल चुनें • Studio Backdrop' : 'Choose Studio Backdrop'}
-              </Text>
+              <Text style={styles.presetHeaderTitle}>{t('ai.chooseBackdrop')}</Text>
               {isSwitchingPreset && <ActivityIndicator size="small" color={colors.primary.rust} />}
             </View>
 
@@ -520,9 +499,9 @@ export default function AIEnhance({ route, navigation }) {
                     selectedPreset === 'studio_white' && styles.presetCardLabelActive,
                   ]}
                 >
-                  Studio White
+                  {t('ai.preset.studioWhite')}
                 </Text>
-                <Text style={styles.presetCardSub}>Marketplace</Text>
+                <Text style={styles.presetCardSub}>{t('ai.presetSub.marketplace')}</Text>
               </TouchableOpacity>
 
               {/* Preset 2: Warm Neutral */}
@@ -545,9 +524,9 @@ export default function AIEnhance({ route, navigation }) {
                     selectedPreset === 'warm_neutral' && styles.presetCardLabelActive,
                   ]}
                 >
-                  Warm Neutral
+                  {t('ai.preset.warmNeutral')}
                 </Text>
-                <Text style={styles.presetCardSub}>Craft & Clay</Text>
+                <Text style={styles.presetCardSub}>{t('ai.presetSub.craftClay')}</Text>
               </TouchableOpacity>
 
               {/* Preset 3: Cool Gray */}
@@ -570,9 +549,9 @@ export default function AIEnhance({ route, navigation }) {
                     selectedPreset === 'cool_gray' && styles.presetCardLabelActive,
                   ]}
                 >
-                  Cool Gray
+                  {t('ai.preset.coolGray')}
                 </Text>
-                <Text style={styles.presetCardSub}>Metal & Brass</Text>
+                <Text style={styles.presetCardSub}>{t('ai.presetSub.metalBrass')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -586,14 +565,8 @@ export default function AIEnhance({ route, navigation }) {
                 <Ionicons name="sparkles" size={16} color={colors.primary.rust} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.aiDescTitle}>
-                  {currentLanguage === 'hi' ? '✨ AI उत्पाद विवरण • AI Description' : '✨ AI Product Description'}
-                </Text>
-                <Text style={styles.aiDescSub}>
-                  {currentLanguage === 'hi'
-                    ? 'फ़ोटो से स्वतः तैयार किया गया ई-कॉमर्स विवरण (संपादित करें)'
-                    : 'Auto-generated SEO copy from product image (editable)'}
-                </Text>
+                <Text style={styles.aiDescTitle}>{t('ai.descSectionTitle')}</Text>
+                <Text style={styles.aiDescSub}>{t('ai.descSectionSub')}</Text>
               </View>
 
               {isGeneratingDesc && (
@@ -615,27 +588,21 @@ export default function AIEnhance({ route, navigation }) {
                 activeOpacity={0.8}
               >
                 <Ionicons name="sparkles" size={16} color={colors.surface.white} />
-                <Text style={styles.generateDescBtnText}>
-                  {currentLanguage === 'hi'
-                    ? 'विवरण तैयार करें • Generate Description'
-                    : '✨ Generate Description from Photo'}
-                </Text>
+                <Text style={styles.generateDescBtnText}>{t('ai.generateDescBtn')}</Text>
               </TouchableOpacity>
             ) : (
               <View style={styles.descFieldsContainer}>
                 {/* Editable Title */}
                 <View style={styles.inputGroup}>
                   <View style={styles.labelRow}>
-                    <Text style={styles.inputLabel}>
-                      {currentLanguage === 'hi' ? 'शीर्षक • Listing Title' : 'Marketplace Title'}
-                    </Text>
+                    <Text style={styles.inputLabel}>{t('ai.titleLabel')}</Text>
                     <Ionicons name="pencil" size={12} color={colors.text.muted} />
                   </View>
                   <TextInput
                     style={styles.titleInput}
                     value={aiTitle}
                     onChangeText={setAiTitle}
-                    placeholder="Enter product title..."
+                    placeholder={t('ai.titlePlaceholder')}
                     placeholderTextColor="#94A3B8"
                   />
                 </View>
@@ -643,9 +610,7 @@ export default function AIEnhance({ route, navigation }) {
                 {/* Editable Description */}
                 <View style={styles.inputGroup}>
                   <View style={styles.labelRow}>
-                    <Text style={styles.inputLabel}>
-                      {currentLanguage === 'hi' ? 'विवरण • Product Story & Details' : 'Product Description & Story'}
-                    </Text>
+                    <Text style={styles.inputLabel}>{t('ai.descLabel')}</Text>
                     <Ionicons name="pencil" size={12} color={colors.text.muted} />
                   </View>
                   <TextInput
@@ -654,7 +619,7 @@ export default function AIEnhance({ route, navigation }) {
                     onChangeText={setAiDescription}
                     multiline
                     numberOfLines={4}
-                    placeholder="Craft description, materials, and heritage..."
+                    placeholder={t('ai.descPlaceholder')}
                     placeholderTextColor="#94A3B8"
                   />
                 </View>
@@ -677,9 +642,7 @@ export default function AIEnhance({ route, navigation }) {
                   disabled={isGeneratingDesc}
                 >
                   <Ionicons name="refresh" size={13} color={colors.primary.rust} />
-                  <Text style={styles.regenLinkText}>
-                    {currentLanguage === 'hi' ? 'पुनः तैयार करें • Regenerate' : 'Regenerate Description'}
-                  </Text>
+                  <Text style={styles.regenLinkText}>{t('ai.regen')}</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -691,24 +654,18 @@ export default function AIEnhance({ route, navigation }) {
           <View style={styles.errorCard}>
             <View style={styles.errorHeader}>
               <Ionicons name="warning" size={20} color={colors.status.amber} />
-              <Text style={styles.errorTitle}>
-                {currentLanguage === 'hi'
-                  ? 'फ़ोटो सुधारने में समस्या • Enhancement Issue'
-                  : 'Enhancement Issue'}
-              </Text>
+              <Text style={styles.errorTitle}>{t('ai.errorTitle')}</Text>
             </View>
             <Text style={styles.errorDescription}>
-              {errorMessage}. {currentLanguage === 'hi'
-                ? 'आप पुनः प्रयास कर सकते हैं या मूल फ़ोटो के साथ आगे बढ़ सकते हैं।'
-                : 'You can retry or continue with your original captured photo.'}
+              {errorMessage}. {t('ai.errorSub')}
             </Text>
             <View style={styles.errorActionsRow}>
               <TouchableOpacity onPress={handleRetry} style={styles.retryBtn}>
                 <Ionicons name="reload" size={14} color={colors.surface.white} />
-                <Text style={styles.retryBtnText}>पुनः प्रयास करें / Retry</Text>
+                <Text style={styles.retryBtnText}>{t('ai.retry')}</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={handleUseOriginal} style={styles.bypassBtn}>
-                <Text style={styles.bypassBtnText}>मूल फ़ोटो रखें / Keep Original</Text>
+                <Text style={styles.bypassBtnText}>{t('ai.keepOriginal')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -795,7 +752,7 @@ export default function AIEnhance({ route, navigation }) {
         />
         {!isDone && !errorMessage && (
           <TouchableOpacity onPress={handleUseOriginal} style={styles.skipLink}>
-            <Text style={styles.skipLinkText}>मूल फ़ोटो का उपयोग करें • Skip & Use Original</Text>
+            <Text style={styles.skipLinkText}>{t('ai.keepOriginal')}</Text>
           </TouchableOpacity>
         )}
       </View>
