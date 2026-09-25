@@ -9,13 +9,14 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
+import { useTranslation } from '../i18n';
 
 export default function VoiceInputButton({
   isRecording = false,
   isProcessing = false,
   onPress,
   onTranscribed,
-  mockText = 'हस्तनिर्मित बनारसी साड़ी',
+  mockText,
   delayMs = 1500,
   size = 52,
   disabled = false,
@@ -23,7 +24,9 @@ export default function VoiceInputButton({
   testID,
 }) {
   const [internalListening, setInternalListening] = useState(false);
+  const { t } = useTranslation();
   const activeListening = onPress ? isRecording : internalListening;
+  const resolvedMockText = mockText ?? t('voice.mockTranscript');
 
   // Animation values
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -141,7 +144,7 @@ export default function VoiceInputButton({
     timerRef.current = setTimeout(() => {
       setInternalListening(false);
       if (onTranscribed) {
-        onTranscribed(mockText);
+        onTranscribed(resolvedMockText);
       }
     }, delayMs);
   };

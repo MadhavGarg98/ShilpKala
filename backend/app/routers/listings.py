@@ -56,12 +56,12 @@ class GenerateListingResponse(BaseModel):
 @router.post(
     "/generate",
     response_model=GenerateListingResponse,
-    summary="AI Listing Generator — Groq llama-3.3-70b-versatile (Transcript → Structured Listing)"
+    summary="AI Listing Generator — Groq LLM chain (Transcript → Structured Listing)"
 )
 def generate_listing(req: GenerateListingRequest):
     """
     AI Listing Generation (Groq-only pipeline):
-    - Calls Groq (llama-3.3-70b-versatile) with a structured JSON prompt.
+    - Calls Groq (openai/gpt-oss-120b, with qwen fallback) with a structured JSON prompt.
     - Returns: title, description_en (English), description_hi (Hindi/Devanagari), keywords[].
     - On JSON parse failure: retries once with a stricter prompt, then falls back to a
       labeled deterministic template response — never crashes.

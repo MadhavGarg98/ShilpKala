@@ -1,4 +1,5 @@
 import React from 'react';
+import { Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
@@ -8,12 +9,14 @@ import ProductsScreen from '../screens/main/ProductsScreen';
 import InquiriesStack from './InquiriesStack';
 import AlertsScreen from '../screens/main/AlertsScreen';
 import { useAppStore } from '../store/useAppStore';
+import { useTranslation } from '../i18n';
 
 const Tab = createBottomTabNavigator();
 
 export default function MainTabs() {
   const unreadInquiries = useAppStore((state) => state.unreadInquiryCount);
   const unreadNotifications = useAppStore((state) => state.unreadNotificationCount);
+  const { t, getSecondary } = useTranslation();
 
   return (
     <Tab.Navigator
@@ -54,21 +57,33 @@ export default function MainTabs() {
         name="Home"
         component={HomeScreen}
         options={{
-          tabBarLabel: 'होम / Home',
+          tabBarLabel: () => (
+            <BilingualTabLabel text={t('tab.home')} secondary={getSecondary('tab.home')} />
+          ),
         }}
       />
       <Tab.Screen
         name="Products"
         component={ProductsScreen}
         options={{
-          tabBarLabel: 'उत्पाद / Products',
+          tabBarLabel: () => (
+            <BilingualTabLabel
+              text={t('tab.products')}
+              secondary={getSecondary('tab.products')}
+            />
+          ),
         }}
       />
       <Tab.Screen
         name="Inquiries"
         component={InquiriesStack}
         options={{
-          tabBarLabel: 'पूछताछ / Inquiries',
+          tabBarLabel: () => (
+            <BilingualTabLabel
+              text={t('tab.inquiries')}
+              secondary={getSecondary('tab.inquiries')}
+            />
+          ),
           tabBarBadge: unreadInquiries > 0 ? unreadInquiries : undefined,
           tabBarBadgeStyle: {
             backgroundColor: colors.primary.rust,
@@ -80,7 +95,12 @@ export default function MainTabs() {
         name="Alerts"
         component={AlertsScreen}
         options={{
-          tabBarLabel: 'सूचनाएं / Alerts',
+          tabBarLabel: () => (
+            <BilingualTabLabel
+              text={t('tab.alerts')}
+              secondary={getSecondary('tab.alerts')}
+            />
+          ),
           tabBarBadge: unreadNotifications > 0 ? unreadNotifications : undefined,
           tabBarBadgeStyle: {
             backgroundColor: colors.status.amber,
@@ -89,5 +109,13 @@ export default function MainTabs() {
         }}
       />
     </Tab.Navigator>
+  );
+}
+
+function BilingualTabLabel({ text, secondary }) {
+  return (
+    <Text style={{ textAlign: 'center' }} allowFontScaling={false}>
+      {secondary ? `${text}\n${secondary}` : text}
+    </Text>
   );
 }

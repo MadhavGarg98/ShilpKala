@@ -15,6 +15,7 @@ router = APIRouter(prefix="/api/images", tags=["Image Enhancement"])
 class ImageEnhanceResponse(BaseModel):
     original_url: str
     enhanced_url: str
+    bg_removal_model: Optional[str] = None
     processing_time_ms: int
     width: Optional[int] = None
     height: Optional[int] = None
@@ -175,8 +176,9 @@ async def enhance_image(
         return ImageEnhanceResponse(
             original_url=res["original_url"],
             enhanced_url=res["enhanced_url"],
+            bg_removal_model=res.get("bg_removal_model"),
             processing_time_ms=res.get("processing_time_ms", 18),
-            model_used="Pre-computed rembg + E-Commerce Studio Compositing",
+            model_used="Pre-computed rembg + Catalog Finishing (Real Pipeline)",
             is_demo_cache=True,
             message="Served from Demo Reliability Layer",
             variants={
@@ -263,8 +265,9 @@ async def enhance_image_demo(
     return ImageEnhanceResponse(
         original_url=res["original_url"],
         enhanced_url=res["enhanced_url"],
+        bg_removal_model=res.get("bg_removal_model"),
         processing_time_ms=res.get("processing_time_ms", 18),
-        model_used="Pre-computed u2netp + OpenCV CLAHE (Real Pipeline)",
+        model_used="Pre-computed rembg + AWB/LAB-CLAHE + Catalog Finishing (Real Pipeline)",
         is_demo_cache=True,
         message=f"Instantly served cached demo for {res.get('name')}"
     )

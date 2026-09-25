@@ -38,16 +38,16 @@ export default function ReplyPreview({ route, navigation }) {
 
   const productTitle =
     t(inquiry?.productTitleKey) ||
-    (currentLanguage === 'en'
-      ? inquiry?.productTitleEnglish || inquiry?.productTitleHindi || 'Handcrafted Product'
-      : inquiry?.productTitleHindi || inquiry?.productTitleEnglish || 'हस्तशिल्प उत्पाद');
+    inquiry?.productTitleEnglish ||
+    inquiry?.productTitleHindi ||
+    t('bp.defaultTitle');
 
   // Professional English reply text
   const englishReplyBody =
     inquiry?.mockEnglishReply ||
     `Dear ${buyerName},\n\nThank you for your interest in our ${productTitle}.\n\nWe would be pleased to fulfill your order. Every piece is handcrafted with traditional techniques and authentic materials. Production timeline is **15 to 20 business days**.\n\nWarm regards,\n${
-      artisanProfile?.name || 'Ram Niwas'
-    }\n${artisanProfile?.craftType || 'Master Artisan'}`;
+      artisanProfile?.name || t('settings.voiceMockName')
+    }\n${artisanProfile?.craftType || t('rp.masterArtisan')}`;
 
   const handleSendReply = async () => {
     setSending(true);
@@ -89,7 +89,7 @@ export default function ReplyPreview({ route, navigation }) {
       {/* 1. FocusModeHeader */}
       <FocusModeHeader
         title={t('replyPreviewHeader')}
-        subtitle="सत्यापित अंग्रेजी प्रारूप · Verified Draft"
+        subtitle={t('rp.verifiedDraft')}
         navigation={navigation}
       />
 
@@ -195,7 +195,7 @@ export default function ReplyPreview({ route, navigation }) {
           {showOriginalHindi ? (
             <View style={styles.accordionContent}>
               <Text style={styles.originalHindiText}>
-                {transcribedHindi || inquiry?.messageHindi || 'हिंदी आवाज़ प्रारूप उपलब्ध नहीं है।'}
+                {transcribedHindi || inquiry?.messageHindi || t('rp.hindiFallback')}
               </Text>
             </View>
           ) : null}

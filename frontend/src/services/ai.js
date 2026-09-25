@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 import { resolveApiUrl, isDemoMode } from '../config';
 import { rnMultipartUpload } from '../utils/networkUpload';
+import { t } from '../i18n';
 
 const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
@@ -279,7 +280,7 @@ export async function generateListingFromAudio({ transcript, imageUri, languageC
   const url = resolveApiUrl('/api/listings/generate');
 
   const payload = {
-    transcript: transcript || 'हस्तनिर्मित पारंपरिक भारतीय शिल्प',
+    transcript: transcript || t('ai.defaultTranscript', languageCode === 'en' ? 'en' : 'hi'),
     language_code: languageCode || 'hi-IN',
     image_url: typeof imageUri === 'string' ? imageUri : null,
     craft_type: craftType,

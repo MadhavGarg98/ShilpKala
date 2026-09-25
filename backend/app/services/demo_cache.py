@@ -7,7 +7,7 @@ from typing import Dict, Any, Optional
 
 from app.config import settings
 from app.services.storage import storage
-from app.services.image_enhancement import image_enhancer
+from app.services.image_enhancement import image_enhancer, BG_REMOVAL_MODEL_LABEL
 
 logger = logging.getLogger(__name__)
 
@@ -55,15 +55,22 @@ class DemoCacheService:
     instantaneous demo for live presentations.
     """
 
+    # Bump when the enhancement pipeline output changes so stale cached
+    # enhanced_*.jpg files regenerate automatically on next startup.
+    CACHE_VERSION = "v2-catalog"
+
     def __init__(self):
         self.cache: Dict[str, Dict[str, Any]] = {}
         self.is_initialized = False
+        self._invalidate_stale_cache()
 
     def warm_cache(self):
         """Pre-runs the real image enhancement pipeline on all demo products."""
         logger.info("Initializing ShilpKala Demo Reliability Layer cache...")
         cache_dir = Path(settings.UPLOAD_DIR) / "demo_cache"
         cache_dir.mkdir(parents=True, exist_ok=True)
+        marker = cache_dir / f".cache_version_{self.CACHE_VERSION}"
+        marker.touch()
 
         for key, meta in DEMO_PRODUCTS.items():
             src_file = FRONTEND_PRODUCTS_DIR / meta["file"]
@@ -78,8 +85,8 @@ class DemoCacheService:
             enhanced_key = f"demo_cache/enhanced_{key}.jpg"
             enhanced_local = storage.get_local_path(enhanced_key)
 
-            if enhanced_local.exists():
-                # Already pre-cached
+            if enhanced_local.exists() and not self._is_stale(enhanced_local):
+                # Already pre-cached with the current pipeline version
                 orig_url = storage.get_url(orig_key)
                 enhanced_url = storage.get_url(enhanced_key)
                 self.cache[key] = {
@@ -88,6 +95,7 @@ class DemoCacheService:
                     "craft_type": meta["craft_type"],
                     "original_url": orig_url,
                     "enhanced_url": enhanced_url,
+                    "bg_removal_model": BG_REMOVAL_MODEL_LABEL,
                     "processing_time_ms": 15,
                     "real_pipeline_benchmark_ms": 1280,
                     "is_demo_cache": True,
@@ -110,6 +118,7 @@ class DemoCacheService:
                     "craft_type": meta["craft_type"],
                     "original_url": orig_url,
                     "enhanced_url": storage.get_url(enhanced_key),
+                    "bg_removal_model": res.get("bg_removal_model"),
                     "processing_time_ms": 15,
                     "real_pipeline_benchmark_ms": res["processing_time_ms"],
                     "is_demo_cache": True,
@@ -118,6 +127,27 @@ class DemoCacheService:
 
         self.is_initialized = True
         logger.info(f"Demo cache initialized with {len(self.cache)} items.")
+
+    def _is_stale(self, enhanced_local: Path) -> bool:
+        """A cache file is stale if it predates the current pipeline version marker."""
+        marker = enhanced_local.parent / f".cache_version_{self.CACHE_VERSION}"
+        return not marker.exists()
+
+    def _invalidate_stale_cache(self):
+        """
+        Delete enhanced_* files produced by an older pipeline version so
+        warm_cache() regenerates them through the current pipeline.
+        """
+        try:
+            cache_dir = storage.get_local_path("demo_cache")
+            marker = cache_dir / f".cache_version_{self.CACHE_VERSION}"
+            if marker.exists():
+                return  # cache already matches current pipeline
+            for stale in cache_dir.glob("enhanced_*.jpg"):
+                stale.unlink(missing_ok=True)
+                logger.info(f"Invalidated stale demo cache file: {stale.name}")
+        except Exception as e:
+            logger.warning(f"Demo cache invalidation skipped: {e}")
 
     def get_demo_result(self, item_key: Optional[str] = None, query: Optional[str] = None) -> Dict[str, Any]:
         """

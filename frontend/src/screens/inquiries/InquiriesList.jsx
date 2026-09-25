@@ -42,14 +42,22 @@ export default function InquiriesList({ navigation }) {
   const unreadAudioText = useMemo(() => {
     const unreadItems = inquiries.filter((i) => i.status === 'unread');
     if (unreadItems.length === 0) {
-      return 'आपके पास कोई नया अपठित संदेश नहीं है। You have no unread buyer inquiries.';
+      return t('it.unreadAudioEmpty');
     }
     return unreadItems
-      .map(
-        (item, index) =>
-          `संदेश ${index + 1}: ${item.buyerName}, ${item.buyerCompany} से। उत्पाद: ${
-            item.productTitleHindi || item.productTitleEnglish
-          }। संदेश: ${item.messageHindi || item.messageOriginal}`
+      .map((item, index) =>
+        t('it.unreadAudioItem')
+          .replace('{n}', index + 1)
+          .replace('{name}', item.buyerName || '')
+          .replace('{company}', item.buyerCompany || '')
+          .replace(
+            '{product}',
+            t(item.productTitleKey) || item.productTitleEnglish || item.productTitleHindi || ''
+          )
+          .replace(
+            '{message}',
+            t(item.messageKey) || item.messageHindi || item.messageOriginal || ''
+          )
       )
       .join(' ... ');
   }, [inquiries]);
@@ -61,10 +69,8 @@ export default function InquiriesList({ navigation }) {
   const handleCompose = () => {
     Alert.alert(
       t('composeInquiry'),
-      currentLanguage === 'en'
-        ? 'Compose a new direct craft inquiry or quotation for registered wholesale buyers.'
-        : 'पंजीकृत थोक खरीदारों के लिए एक नया सीधा शिल्प संदेश या कोटेशन तैयार करें।',
-      [{ text: 'OK' }]
+      t('it.composeBody'),
+      [{ text: t('common.ok') }]
     );
   };
 
@@ -198,10 +204,6 @@ export default function InquiriesList({ navigation }) {
   const renderEmptyState = () => (
     <IllustratedEmptyState
       type="inquiries"
-      titleHindi="अभी कोई खरीदार संदेश नहीं है"
-      titleEnglish="No buyer inquiries yet"
-      descHindi="जब खरीदार आपकी हस्तशिल्प कला देखेंगे, उनके संदेश और पूछताछ यहाँ दिखाई देंगे।"
-      descEnglish="When buyers across the world discover your craft listings, their inquiries will appear right here."
     />
   );
 
@@ -210,7 +212,7 @@ export default function InquiriesList({ navigation }) {
       {/* 1. TabRootHeader with dynamic title and unread badge */}
       <TabRootHeader
         title={t('buyerInquiriesHeadline')}
-        subtitle="सीधी खरीदार बातचीत • Direct Buyer Inquiries"
+        subtitle={t('inqTab.headerSubtitle')}
         rightElement={
           <View style={styles.unreadHeaderBadge}>
             <Text style={styles.unreadHeaderBadgeText}>

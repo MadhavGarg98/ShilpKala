@@ -3,7 +3,6 @@ import logging
 from typing import Dict, Any, Optional, List
 
 from app.config import settings
-from app.services.voice_cache import DEMO_VOICE_PHRASES, LANGUAGE_CODE_MAP
 
 logger = logging.getLogger("listing_generator")
 
@@ -22,10 +21,16 @@ LANG_NAMES: Dict[str, str] = {
 # ═══════════════════════════════════════════════════════════════════════════
 # MODEL SELECTION
 # ═══════════════════════════════════════════════════════════════════════════
-# Groq's 70B-class Llama model optimised for multilingual structured generation
-# with sub-second inference speeds via Groq's LPU inference engine.
-# Fallback model string if deprecated: "llama-3.1-70b-versatile".
-_GROQ_MODEL = "llama-3.3-70b-versatile"
+# Preferred Groq chat models, tried in order. The first is the highest-quality
+# multilingual model; later entries are automatic fallbacks in case a model is
+# deprecated/renamed by Groq (a dead model ID used to silently trigger the demo
+# template fallback — the chain prevents that from ever recurring silently).
+_GROQ_MODEL_CHAIN = [
+    "openai/gpt-oss-120b",
+    "qwen/qwen3.8-27b",
+]
+# Backwards-compatible alias for anything still referencing a single model string.
+_GROQ_MODEL = _GROQ_MODEL_CHAIN[0]
 
 
 class ListingGeneratorService:
@@ -33,10 +38,13 @@ class ListingGeneratorService:
     AI Listing Generation — Groq-only edition.
 
     Provider chain (GROQ_API_KEY only — no Anthropic or OpenAI):
-      1. Groq (llama-3.3-70b-versatile) with response_format=json_object.
+      1. Groq chat models (see _GROQ_MODEL_CHAIN) with response_format=json_object.
          - Attempt 1: standard structured prompt.
          - Attempt 2 (retry): stricter "return ONLY valid JSON" prompt on parse failure.
-      2. Deterministic craft-aware multilingual template fallback — never crashes.
+         - If a model is missing/deprecated (404), automatically tries the next
+           model in the chain instead of falling straight to templates.
+      2. Deterministic craft-aware multilingual template fallback — never crashes,
+         and always echoes the real transcript instead of demo data.
 
     All keys (ANTHROPIC_API_KEY, OPENAI_API_KEY) are intentionally not referenced.
     """
@@ -51,7 +59,7 @@ class ListingGeneratorService:
         short_lang = language_code.split("-")[0].lower()
         lang_name = LANG_NAMES.get(short_lang, "Hindi")
 
-        # ─── PRIMARY: Groq (llama-3.3-70b-versatile) ────────────────
+        # ─── PRIMARY: Groq (model chain, see _GROQ_MODEL_CHAIN) ─────
         if settings.GROQ_API_KEY:
             try:
                 res = self._call_groq(transcript, short_lang, lang_name, craft_type)
@@ -76,9 +84,7 @@ class ListingGeneratorService:
             logger.warning(
                 "GROQ_API_KEY is not set — cannot call Groq. "
                 "Using template fallback."
-            )
-
-        # ─── FALLBACK: Deterministic multilingual template ───────────
+            )            # ─── FALLBACK: Deterministic multilingual template ─────────
         logger.info(
             f"Using high-fidelity template fallback for language: {lang_name} ({short_lang})."
         )
@@ -171,11 +177,12 @@ Return a STRICT JSON object without any markdown formatting or surrounding text.
         craft_type: str,
     ) -> Optional[Dict[str, Any]]:
         """
-        Call Groq chat completions (llama-3.3-70b-versatile).
+        Call Groq chat completions, walking _GROQ_MODEL_CHAIN in order.
 
         Retry policy:
-          - Attempt 1: standard structured prompt.
-          - Attempt 2: stricter "return ONLY valid JSON" prompt on JSON parse failure.
+          - Per model: attempt 1 standard prompt, attempt 2 stricter JSON prompt.
+          - Model missing/deprecated (404 model_not_found / does_not_exist) →
+            advance to the next model in the chain immediately.
           - Rate-limit (429) → return None immediately (no retry, let caller log).
         """
         from groq import Groq
@@ -188,44 +195,56 @@ Return a STRICT JSON object without any markdown formatting or surrounding text.
             "Always include a natural Hindi translation in 'description_hi' field."
         )
 
-        for attempt in range(1, 3):  # attempt 1 and 2
-            try:
-                prompt = self._build_prompt(
-                    transcript, short_lang, lang_name, craft_type, strict=(attempt > 1)
-                )
-                if attempt == 2:
-                    logger.info("[Groq] Retrying with strict JSON prompt after parse failure.")
+        for model in _GROQ_MODEL_CHAIN:
+            for attempt in range(1, 3):  # attempt 1 and 2
+                try:
+                    prompt = self._build_prompt(
+                        transcript, short_lang, lang_name, craft_type, strict=(attempt > 1)
+                    )
+                    if attempt == 2:
+                        logger.info(
+                            f"[Groq] Retrying with strict JSON prompt on {model} "
+                            "after parse failure."
+                        )
 
-                response = client.chat.completions.create(
-                    model=_GROQ_MODEL,
-                    temperature=0.2,
-                    response_format={"type": "json_object"},
-                    messages=[
-                        {"role": "system", "content": system_msg},
-                        {"role": "user", "content": prompt},
-                    ],
-                )
+                    response = client.chat.completions.create(
+                        model=model,
+                        temperature=0.2,
+                        response_format={"type": "json_object"},
+                        messages=[
+                            {"role": "system", "content": system_msg},
+                            {"role": "user", "content": prompt},
+                        ],
+                    )
 
-                raw_text = response.choices[0].message.content
-                clean = self._clean_json_str(raw_text)
-                parsed = json.loads(clean)
-                return self._standardize_response(parsed, short_lang, lang_name)
+                    raw_text = response.choices[0].message.content
+                    clean = self._clean_json_str(raw_text)
+                    parsed = json.loads(clean)
+                    return self._standardize_response(parsed, short_lang, lang_name)
 
-            except json.JSONDecodeError as e:
-                logger.warning(f"[Groq] Attempt {attempt} — JSON parse failed: {e}")
-                if attempt == 2:
-                    # Both attempts failed to produce valid JSON — fall through to template
-                    logger.error("[Groq] JSON parse failed on retry. Using template fallback.")
-                    return None
-            except Exception as e:
-                err_str = str(e)
-                if "429" in err_str or "rate_limit" in err_str.lower():
-                    # Rate limit: do NOT retry, pass immediately to fallback
-                    raise
-                logger.warning(f"[Groq] Attempt {attempt} error: {e}")
-                if attempt == 2:
-                    return None
+                except json.JSONDecodeError as e:
+                    logger.warning(f"[Groq] {model} attempt {attempt} — JSON parse failed: {e}")
+                    if attempt == 2:
+                        logger.error(
+                            f"[Groq] {model} JSON parse failed on retry. Trying next model."
+                        )
+                        break  # move to next model in chain
+                except Exception as e:
+                    err_str = str(e)
+                    if "429" in err_str or "rate_limit" in err_str.lower():
+                        # Rate limit: do NOT retry, pass immediately to fallback
+                        raise
+                    if "model_not_found" in err_str or "does not exist" in err_str:
+                        logger.warning(
+                            f"[Groq] Model '{model}' unavailable (deprecated?). "
+                            "Advancing to next model in chain."
+                        )
+                        break  # move to next model in chain
+                    logger.warning(f"[Groq] {model} attempt {attempt} error: {e}")
+                    if attempt == 2:
+                        break  # move to next model in chain
 
+        logger.error("[Groq] All models in chain exhausted. Using template fallback.")
         return None
 
     # ─── Internal: deterministic template fallback ───────────────────
@@ -241,8 +260,8 @@ Return a STRICT JSON object without any markdown formatting or surrounding text.
         Deterministic, crash-proof multilingual fallback.
         Adapts title, GI match, and keywords based on craft type and transcript keywords.
         Always populates description_hi (standard Hindi) for the national marketplace.
+        Every string is derived from the artisan's own transcript — no demo data.
         """
-        demo_info = DEMO_VOICE_PHRASES.get(short_lang, DEMO_VOICE_PHRASES["hi"])
         combined = f"{transcript} {craft_type}".lower()
 
         if any(w in combined for w in ["लकड़ी", "हाथी", "wood", "carving", "sheesham", "शीशम", "furniture"]):
@@ -282,26 +301,29 @@ Return a STRICT JSON object without any markdown formatting or surrounding text.
             p_min, p_max = 3500, 7800
 
         else:
-            # Default: Handloom / Banarasi Saree
-            title_local = demo_info["title"]
-            title_en = DEMO_VOICE_PHRASES["en"]["title"]
-            desc_en = demo_info["english_desc"]
+            # Generic handloom default — driven by the artisan's OWN words, never
+            # hardcoded demo data. (This branch used to paste a fixed Banarasi
+            # saree description regardless of what the product actually was.)
+            base_text = transcript.strip() if len(transcript.strip()) > 5 else (craft_type or "Handloom Weaving")
+            title_local = f"हस्तनिर्मित {base_text[:60]}" if short_lang == "hi" else f"Handcrafted {base_text[:60]}"
+            title_en = f"Handcrafted {base_text[:60].title()}"
+            desc_en = f"Authentic handcrafted piece created by skilled Indian artisans using traditional techniques. Artisan notes: {base_text}"
             desc_hi = (
-                demo_info.get("transcript", "")
+                f"कुशल भारतीय कारीगरों द्वारा पारंपरिक तकनीकों से निर्मित प्रामाणिक हस्तशिल्प। कारीगर की टिप्पणी: {base_text}"
                 if short_lang == "hi"
-                else "बनारसी बुनकरों द्वारा हस्तनिर्मित रेशमी साड़ी। जीआई प्रमाणित पारंपरिक शिल्प।"
+                else desc_en
             )
-            gi_name = "Banaras Brocades & Sarees (GI Reg #99)"
-            keywords = demo_info["keywords"]
-            p_min, p_max = 5500, 7200
+            gi_name = None
+            keywords = ["Handmade", "Handloom", "Artisan", "Heritage", "IndianCraft"]
+            p_min, p_max = 1500, 4500
 
         return {
             "title": title_local,
             "title_english": title_en,
-            "description_local": transcript if len(transcript) > 5 else demo_info["transcript"],
+            "description_local": transcript if len(transcript.strip()) > 5 else desc_hi,
             "description_hi": desc_hi,
             "description_en": desc_en,
-            "is_gi_match": True,
+            "is_gi_match": bool(gi_name),
             "gi_name": gi_name,
             "suggested_price_min": p_min,
             "suggested_price_max": p_max,

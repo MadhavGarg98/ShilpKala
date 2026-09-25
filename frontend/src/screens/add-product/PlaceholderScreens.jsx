@@ -3,19 +3,21 @@ import { SafeAreaView, View, Text, StyleSheet } from 'react-native';
 import { colors } from '../../theme/colors';
 import PrimaryButton from '../../components/PrimaryButton';
 import StepFlowHeader from '../../components/StepFlowHeader';
+import { useTranslation } from '../../i18n';
 
 export function ListingReview({ route, navigation }) {
   const { transcript } = route?.params || {};
+  const { t } = useTranslation();
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StepFlowHeader step={3} total={3} title="Listing Review" />
+      <StepFlowHeader step={3} total={3} title={t('ai.selectItemTitle')} />
       <View style={styles.container}>
-        <Text style={styles.title}>विवरण समीक्षा / Listing Review</Text>
+        <Text style={styles.title}>{t('lr.errorHeading')}</Text>
         <Text style={styles.desc}>
-          {transcript || 'Voice transcription ready for Heritage & GI matching in next phase.'}
+          {transcript || t('lr.defaultTranscript')}
         </Text>
         <PrimaryButton
-          title="होम पर वापस जाएं / Back to Home"
+          title={t('alert.backToHome')}
           onPress={() => navigation.navigate('MainTabs', { screen: 'Home' })}
           style={{ marginTop: 24 }}
         />

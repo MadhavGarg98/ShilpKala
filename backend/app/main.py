@@ -5,10 +5,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
-from app.db.session import engine, Base, SessionLocal
+from app.db.session import engine, Base, SessionLocal, ensure_sqlite_dev_schema
 from app.models.artisan import Artisan
 from app.models.product import Product
 from app.models.listing import Listing
+from app.models.recommendation import Recommendation
+from app.models.profile import Profile, Buyer
+from app.auth.jwt_verifier import auth_is_configured
+from app.auth.middleware import SupabaseAuthMiddleware
 from app.services.image_enhancement import image_enhancer
 from app.services.demo_cache import demo_cache
 from app.services.voice_cache import voice_cache
@@ -19,6 +23,8 @@ from app.routers import (
     listings_router,
     voice_router,
     pricing_router,
+    recommendations_router,
+    auth_router,
 )
 
 # Setup logging
@@ -31,6 +37,7 @@ logger = logging.getLogger("shilpkala")
 # Ensure database tables are created on module load
 try:
     Base.metadata.create_all(bind=engine)
+    ensure_sqlite_dev_schema(engine)
 except Exception as e:
     logger.warning(f"Initial table creation notice: {e}")
 
@@ -42,7 +49,14 @@ async def lifespan(app: FastAPI):
     # 1. Initialize Database Tables
     try:
         Base.metadata.create_all(bind=engine)
+        added = ensure_sqlite_dev_schema(engine)
         logger.info("Database tables verified.")
+        if added:
+            logger.info("Applied %d additive dev column(s) to SQLite.", added)
+        from app.config import settings as _s
+        backend = "sqlite" if str(_s.DATABASE_URL).startswith("sqlite") else "postgres"
+        logger.info("Database backend: %s", backend)
+        logger.info("Supabase auth configured: %s (enforced: %s)", auth_is_configured(), _s.AUTH_ENABLED)
     except Exception as e:
         logger.error(f"Error creating database tables: {e}")
 
@@ -109,6 +123,11 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# Supabase auth middleware (resolves + optionally enforces the caller's role).
+# Added BEFORE CORSMiddleware so CORS ends up outermost and can decorate
+# auth-rejection responses with the proper headers.
+app.add_middleware(SupabaseAuthMiddleware)
+
 # CORS Configuration for React Native & Web
 app.add_middleware(
     CORSMiddleware,
@@ -128,6 +147,8 @@ app.include_router(artisans_router)
 app.include_router(listings_router)
 app.include_router(voice_router)
 app.include_router(pricing_router)
+app.include_router(recommendations_router)
+app.include_router(auth_router)
 
 @app.get("/", tags=["Health"])
 def root():
@@ -142,6 +163,7 @@ def root():
             "voice_tts_demo": "POST /api/voice/synthesize/demo",
             "ai_listing_generate": "POST /api/listings/generate",
             "pricing_suggest": "POST /api/pricing/suggest",
+            "demand_recommendations": "POST /api/recommendations/demand",
             "pricing_benchmarks": "GET /api/pricing/benchmarks",
             "image_enhancement_real": "POST /api/images/enhance",
             "image_enhancement_demo": "POST /api/images/enhance/demo",
@@ -150,11 +172,22 @@ def root():
             "listings_crud": "/api/listings",
             "docs": "/docs"
         },
+        "auth": {
+            "supabase_configured": auth_is_configured(),
+            "enforcement_enabled": settings.AUTH_ENABLED,
+            "roles": ["artisan", "buyer"],
+            "note": (
+                "Supabase JWT (JWKS ES256 or legacy HS256) verified in middleware; "
+                "role resolved from public.profiles. Enforcement is off unless "
+                "AUTH_ENABLED=true."
+            ),
+        },
         "honesty_contract": {
             "phase_1_image_enhancer": "REAL (rembg u2netp + OpenCV CLAHE + Super-Resolution)",
             "phase_2_voice_pipeline": "REAL (Sarvam primary with Bhashini & Whisper/gTTS fallbacks)",
             "phase_2_listing_generator": "REAL (Multilingual LLM across 9 Indian languages + English)",
             "phase_3_dynamic_pricing": "REAL (Rules-based heuristic v1 citing published MoT guidelines + GI premium)",
+            "demand_recommendations": "REAL (pytrends best-effort with static seasonal-demand fallback; source honestly traced per response)",
             "module_4_authenticity": "SIMULATED (per contract)",
             "module_5_ondc_network": "SIMULATED (per contract)"
         }

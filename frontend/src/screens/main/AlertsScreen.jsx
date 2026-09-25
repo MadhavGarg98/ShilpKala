@@ -28,17 +28,17 @@ export default function AlertsScreen({ navigation }) {
   const inquiries = useAppStore((state) => state.inquiries);
   const markAllNotificationsRead = useAppStore((state) => state.markAllNotificationsRead);
   const unreadCount = useAppStore((state) => state.unreadNotificationCount);
-  const { t, currentLanguage } = useTranslation();
+  const { t, getSecondary, currentLanguage } = useTranslation();
 
-  // Group notifications by section: "आज · TODAY" / "इस सप्ताह · THIS WEEK"
+  // Group notifications by stable section token ('today' | 'week'); labels are translated at render.
   const sections = useMemo(() => {
     const groups = {
-      'आज · TODAY': [],
-      'इस सप्ताह · THIS WEEK': [],
+      today: [],
+      week: [],
     };
 
     notifications.forEach((n) => {
-      const g = n.group || 'आज · TODAY';
+      const g = n.groupKey || (String(n.group || '').includes('WEEK') ? 'week' : 'today');
       if (!groups[g]) groups[g] = [];
       groups[g].push(n);
     });
@@ -46,7 +46,7 @@ export default function AlertsScreen({ navigation }) {
     return Object.keys(groups)
       .filter((key) => groups[key].length > 0)
       .map((key) => ({
-        title: key,
+        groupKey: key,
         data: groups[key],
       }));
   }, [notifications]);
@@ -73,28 +73,39 @@ export default function AlertsScreen({ navigation }) {
   };
 
   const handleVoiceAssist = () => {
-    Alert.alert(
-      'Voice Assistant · आवाज़ सहायक',
-      'Speak your query: "क्या कोई नई पूछताछ आई है?" or "What are my latest alerts?"',
-      [{ text: 'OK' }]
-    );
+    Alert.alert(t('alert.voiceAssistTitle'), t('alert.voiceAssistBody'), [{ text: 'OK' }]);
   };
 
   const renderNotification = ({ item }) => {
     const iconCfg = NOTIFICATION_ICONS[item.type] || NOTIFICATION_ICONS.inquiry;
     const isUnread = !item.isRead;
 
-    const title =
-      (item.titleKey ? t(item.titleKey) : null) ||
-      (currentLanguage === 'en'
-        ? item.titleEnglish || item.titleHindi || item.title
-        : item.titleHindi || item.titleEnglish || item.title);
+    const messageParams = item.messageParams || null;
+    const resolveKeyed = (key, ...fallbacks) => {
+      let value = key ? t(key) : null;
+      if (value && messageParams) {
+        for (const [k, v] of Object.entries(messageParams)) {
+          value = value.split(`{${k}}`).join(v);
+        }
+      }
+      return value || fallbacks.find(Boolean) || '';
+    };
 
-    const message =
-      (item.messageKey ? t(item.messageKey) : null) ||
-      (currentLanguage === 'en'
-        ? item.messageEnglish || item.messageHindi || item.message
-        : item.messageHindi || item.messageEnglish || item.message);
+    const title = resolveKeyed(
+      item.titleKey,
+      currentLanguage === 'en' ? item.titleEnglish : item.titleHindi,
+      item.titleEnglish,
+      item.titleHindi,
+      item.title
+    );
+
+    const message = resolveKeyed(
+      item.messageKey,
+      currentLanguage === 'en' ? item.messageEnglish : item.messageHindi,
+      item.messageEnglish,
+      item.messageHindi,
+      item.message
+    );
 
     return (
       <View
@@ -117,7 +128,9 @@ export default function AlertsScreen({ navigation }) {
               </Text>
               {isUnread && <View style={styles.unreadDot} />}
             </View>
-            <Text style={styles.timestampText}>{item.timestamp}</Text>
+            <Text style={styles.timestampText}>
+              {item.timestampKey ? t(item.timestampKey) : item.timestamp}
+            </Text>
           </View>
         </View>
 
@@ -134,7 +147,7 @@ export default function AlertsScreen({ navigation }) {
             >
               <Ionicons name="chatbubbles" size={14} color={colors.surface.white} />
               <Text style={styles.chatActionBtnText}>
-                {item.actionText || 'चैट देखें · View Chat'}
+                {item.actionKey ? t(item.actionKey) : item.actionText || t('alert.viewChat')}
               </Text>
               <Ionicons name="arrow-forward" size={12} color={colors.surface.white} />
             </TouchableOpacity>
@@ -144,9 +157,11 @@ export default function AlertsScreen({ navigation }) {
     );
   };
 
-  const renderSectionHeader = ({ section: { title } }) => (
+  const renderSectionHeader = ({ section }) => (
     <View style={styles.sectionHeader}>
-      <Text style={styles.sectionHeaderText}>{title}</Text>
+      <Text style={styles.sectionHeaderText}>
+        {t(section.groupKey === 'week' ? 'alert.groups.week' : 'alert.groups.today')}
+      </Text>
     </View>
   );
 
@@ -154,8 +169,8 @@ export default function AlertsScreen({ navigation }) {
     <SafeAreaView style={styles.safeArea}>
       {/* 1. TabRootHeader with Headline and Unread Count */}
       <TabRootHeader
-        title="सूचनाएं · Notifications"
-        subtitle="महत्वपूर्ण अपडेट और पूछताछ • Important Updates & Alerts"
+        title={t('alert.headerTitle')}
+        subtitle={t('alert.headerSubtitle')}
         rightElement={
           unreadCount > 0 ? (
             <TouchableOpacity
@@ -163,9 +178,7 @@ export default function AlertsScreen({ navigation }) {
               onPress={handleMarkAllRead}
               style={styles.markAllReadBtn}
             >
-              <Text style={styles.markAllReadText}>
-                {currentLanguage === 'en' ? 'Mark all read' : 'सभी पढ़ें'}
-              </Text>
+              <Text style={styles.markAllReadText}>{t('alert.markAllRead')}</Text>
             </TouchableOpacity>
           ) : null
         }
@@ -176,7 +189,7 @@ export default function AlertsScreen({ navigation }) {
         <View style={styles.unreadCountPill}>
           <Ionicons name="notifications" size={13} color={colors.primary.rust} />
           <Text style={styles.unreadCountText}>
-            {unreadCount} {currentLanguage === 'en' ? 'unread alerts' : 'नई सूचनाएं'}
+            {unreadCount} {t('alert.unreadCount')}
           </Text>
         </View>
       </View>
@@ -202,23 +215,15 @@ export default function AlertsScreen({ navigation }) {
             <Ionicons name="mic" size={18} color={colors.surface.white} />
           </View>
           <View style={styles.voiceTextCol}>
-            <Text style={styles.voicePromptPrimary}>
-              {currentLanguage === 'en'
-                ? 'Voice Assistance Available'
-                : 'आवाज़ सहायता उपलब्ध'}
-            </Text>
-            <Text style={styles.voicePromptSecondary}>
-              {currentLanguage === 'en'
-                ? 'Ask: "What are my latest inquiries?"'
-                : 'पूछें: "क्या कोई नया खरीदार संदेश आया है?"'}
-            </Text>
+            <Text style={styles.voicePromptPrimary}>{t('alert.voiceCardTitle')}</Text>
+            <Text style={styles.voicePromptSecondary}>{t('alert.voiceCardBody')}</Text>
           </View>
           <Ionicons name="sparkles" size={16} color={colors.primary.rust} />
         </TouchableOpacity>
 
         {/* 4. SecondaryButton "Back to Home" (Navy outline per addendum style rule) */}
         <SecondaryButton
-          title={currentLanguage === 'en' ? 'Back to Home' : 'होम पर वापस जाएं · Back to Home'}
+          title={t('alert.backToHome')}
           leadingIcon="home-outline"
           onPress={handleBackToHome}
           style={styles.backHomeBtn}

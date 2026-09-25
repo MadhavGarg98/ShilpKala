@@ -53,11 +53,7 @@ export default function ProductsScreen({ navigation }) {
   };
 
   const renderProductCard = ({ item }) => {
-    const title =
-      t(item.titleKey) ||
-      (currentLanguage === 'en'
-        ? item.titleEnglish || item.titleHindi
-        : item.titleHindi || item.titleEnglish);
+    const title = t(item.titleKey) || item.titleEnglish || item.titleHindi;
     const isLive = item.status === 'live';
 
     return (
@@ -140,9 +136,8 @@ export default function ProductsScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <TabRootHeader
-        titleHindi="उत्पाद सूची"
-        titleEnglish="Products"
-        subtitle="आपकी पूरी हस्तशिल्प सूची • Complete Catalog"
+        title={t('products.headerTitle')}
+        subtitle={t('products.headerSubtitle')}
       />
 
       {/* Filter Chips */}

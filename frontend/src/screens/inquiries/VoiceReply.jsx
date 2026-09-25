@@ -46,13 +46,14 @@ export default function VoiceReply({ route, navigation }) {
   }, [hasCaptured]);
 
   // Seed response text if a quick-reply chip was selected, or use default mock transcription
+  const fillName = (s) => s.replace('{name}', inquiry?.buyerName || '');
   const mockHindiResponse =
     selectedReply ||
     (inquiry?.isBulk
-      ? `नमस्ते ${inquiry?.buyerName || ''}, हम 50 पीस का पूरा बैच 25 दिनों में तैयार कर सकते हैं। थोक छूट के साथ ₹5,800 प्रति पीस रहेगा।`
+      ? fillName(t('vr.bulkResponse'))
       : inquiry?.isGiQuery
-      ? `नमस्ते ${inquiry?.buyerName || ''}, हमारी हर साड़ी पर भारत सरकार का आधिकारिक GI-IN-99 टैग और क्यूआर कोड उपलब्ध है।`
-      : `नमस्ते ${inquiry?.buyerName || ''}, आपकी रुचि के लिए धन्यवाद। हम आपके ऑर्डर के लिए सभी विवरण तुरंत उपलब्ध करा रहे हैं।`);
+      ? fillName(t('vr.giResponse'))
+      : fillName(t('vr.defaultResponse')));
 
   const handleTranscribed = (text) => {
     setIsRecording(false);
@@ -141,8 +142,8 @@ export default function VoiceReply({ route, navigation }) {
               />
               <Text style={styles.statusPillText}>
                 {hasCaptured
-                  ? 'रिकॉर्डिंग पूर्ण · Voice Captured'
-                  : 'माइक दबाकर बोलें · Tap Mic to Speak'}
+                  ? t('vr.captured')
+                  : t('vr.tapMic')}
               </Text>
             </View>
           </View>

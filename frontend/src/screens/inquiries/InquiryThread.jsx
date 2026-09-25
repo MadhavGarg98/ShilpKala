@@ -25,16 +25,18 @@ export default function InquiryThread({ route, navigation }) {
 
   const productTitle =
     t(inquiry?.productTitleKey) ||
-    (currentLanguage === 'en'
-      ? inquiry?.productTitleEnglish || inquiry?.productTitleHindi || 'Handcrafted Craft'
-      : inquiry?.productTitleHindi || inquiry?.productTitleEnglish || 'हस्तशिल्प उत्पाद');
+    inquiry?.productTitleEnglish ||
+    inquiry?.productTitleHindi ||
+    t('bp.defaultTitle');
 
-  const suggestedReplies = inquiry?.suggestedReplies || [
-    'हाँ, यह उत्पाद उपलब्ध है (Yes, available)',
-    'थोक मूल्य पर छूट संभव है (Wholesale discount available)',
-    'आधिकारिक GI प्रमाण पत्र शामिल है (GI certificate included)',
-    'तैयार होने में 15 दिन लगेंगे (15 days crafting timeline)',
-  ];
+  const suggestedReplies =
+    (inquiry?.suggestedReplyKeys || []).map((k) => t(k)) ||
+    inquiry?.suggestedReplies || [
+      t('iq.chip1'),
+      t('iq.chip2'),
+      t('iq.chip3'),
+      t('iq.chip4'),
+    ];
 
   const handleVoiceReply = () => {
     navigation.navigate('VoiceReply', {
@@ -46,12 +48,10 @@ export default function InquiryThread({ route, navigation }) {
   const handleTextFallback = () => {
     Alert.alert(
       t('textReplyFallback'),
-      currentLanguage === 'en'
-        ? 'Voice reply is the recommended fast flow for artisans. Opening voice response studio...'
-        : 'कारीगरों के लिए आवाज़ से जवाब देना सबसे तेज़ और आसान तरीका है। वॉयस स्टूडियो खोला जा रहा है...',
+      t('iq.voiceFallbackBody'),
       [
         {
-          text: 'OK',
+          text: t('common.ok'),
           onPress: handleVoiceReply,
         },
       ]
@@ -137,8 +137,7 @@ export default function InquiryThread({ route, navigation }) {
             <AudioPlayerInline
               textToSpeak={t(inquiry?.messageKey) || inquiry?.messageHindi}
               language={currentLanguage === 'en' ? 'en-IN' : 'hi-IN'}
-              label="हिंदी में सुनें · Listen in Hindi"
-              playingLabel="ऑडियो चल रहा है... · Playing..."
+              label={t('iq.listenLabel')}
               variant="bubble"
             />
           </View>

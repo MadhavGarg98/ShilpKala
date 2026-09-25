@@ -79,15 +79,9 @@ export default function VerifyOTP({ route, navigation }) {
     }, 800);
   };
 
-  const buttonTitle =
-    currentLanguage === 'en'
-      ? 'Verify & Continue'
-      : `${t('verifyAndContinue')} / Verify & Continue`;
+  const buttonTitle = t('verifyAndContinue');
 
-  const otpLabelText =
-    currentLanguage === 'en'
-      ? '6-Digit Verification Code'
-      : `${t('otpLabel')} / 6-Digit Code`;
+  const otpLabelText = t('otpLabel');
 
   return (
     <SafeAreaView style={styles.safeArea}>

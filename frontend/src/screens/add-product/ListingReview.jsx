@@ -23,7 +23,7 @@ export default function ListingReview({ route, navigation }) {
   const imageUri =
     route?.params?.imageUri ||
     require('../../../assets/images/products/banarasi-saree.jpg');
-  const transcript = route?.params?.transcript || 'हस्तनिर्मित पारंपरिक भारतीय शिल्प';
+  const transcript = route?.params?.transcript || t('lr.defaultTranscript');
 
   const [loading, setLoading] = useState(true);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
@@ -90,10 +90,10 @@ export default function ListingReview({ route, navigation }) {
   const handleFallbackContinue = () => {
     // Graceful fallback listing in case of offline demo venue
     const fallbackData = {
-      title: transcript.length > 5 ? transcript.slice(0, 45) : 'हाथ से बुनी बनारसी साड़ी',
-      titleEnglish: 'Handcrafted Authentic Artisan Craft',
+      title: transcript.length > 5 ? transcript.slice(0, 45) : t('lr.fallbackTitle'),
+      titleEnglish: t('lr.fallbackTitleEn'),
       description: transcript,
-      descriptionEnglish: 'Authentic handcrafted heritage artisan item created with traditional methods.',
+      descriptionEnglish: t('lr.fallbackDescEn'),
       isGiMatch: true,
       giName: 'Banaras Brocades and Sarees',
       suggestedPriceMin: 5500,
@@ -130,9 +130,7 @@ export default function ListingReview({ route, navigation }) {
         <View style={styles.loaderContainer}>
           <ActivityIndicator size="large" color={colors.primary.rust} />
           <Text style={styles.loaderTextPrimary}>{t('aiGenerating')}</Text>
-          <Text style={styles.loaderTextSecondary}>
-            कारीगर के ध्वनि विवरण एवं उत्पाद छवि का एआई विश्लेषण जारी है...
-          </Text>
+          <Text style={styles.loaderTextSecondary}>{t('lr.loadingSub')}</Text>
         </View>
       ) : errorMessage ? (
         /* Bilingual Error Screen with Retry */
@@ -140,18 +138,16 @@ export default function ListingReview({ route, navigation }) {
           <View style={styles.errorIconWrap}>
             <Ionicons name="cloud-offline-outline" size={44} color={colors.primary.rust} />
           </View>
-          <Text style={styles.errorHeading}>
-            विवरण उत्पन्न करने में समस्या • Generation Notice
-          </Text>
+          <Text style={styles.errorHeading}>{t('lr.errorHeading')}</Text>
           <Text style={styles.errorSubtext}>
-            सर्वर से संपर्क नहीं हो पाया ({errorMessage})। कृपया पुनः प्रयास करें।
+            {t('lr.errorBody').replace('{error}', errorMessage)}
           </Text>
           <TouchableOpacity onPress={handleRetry} style={styles.retryLargeBtn}>
             <Ionicons name="reload" size={18} color={colors.surface.white} />
-            <Text style={styles.retryLargeBtnText}>पुनः प्रयास करें / Retry AI</Text>
+            <Text style={styles.retryLargeBtnText}>{t('lr.retryAI')}</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={handleFallbackContinue} style={styles.fallbackBtn}>
-            <Text style={styles.fallbackBtnText}>मूल विवरण के साथ आगे बढ़ें / Continue</Text>
+            <Text style={styles.fallbackBtnText}>{t('lr.continueWithFallback')}</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -247,7 +243,7 @@ export default function ListingReview({ route, navigation }) {
             />
             <Text style={styles.infoBannerText}>
               {productDetails?.languageName
-                ? `पहचानी गई भाषा: ${productDetails.languageName} • Artisan Voice Analysis Complete`
+                ? t('lr.languageDetected').replace('{language}', productDetails.languageName)
                 : t('reviewInfoNote')}
             </Text>
           </View>

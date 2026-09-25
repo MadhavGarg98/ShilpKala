@@ -36,7 +36,7 @@ export default function PublishSuccess({ route, navigation }) {
     // Add product to store on mount
     const newProduct = {
       id: `prod-${Date.now()}`,
-      titleHindi: productData?.titleHindi || productData?.title || 'हाथ से बुनी साड़ी',
+      titleHindi: productData?.titleHindi || productData?.title || t('lr.fallbackTitle'),
       titleEnglish: productData?.titleEnglish || productData?.title || 'Handwoven Saree',
       descriptionHindi: productData?.descriptionHindi || productData?.description || '',
       descriptionEnglish: productData?.descriptionEnglish || productData?.description || '',
@@ -87,13 +87,22 @@ export default function PublishSuccess({ route, navigation }) {
   const handleShareWhatsApp = async () => {
     const priceText = `₹${(productData?.price || 6400).toLocaleString('en-IN')}`;
     const titleText =
-      currentLanguage === 'en'
-        ? productData?.titleEnglish || productData?.title || 'Handwoven Saree'
-        : productData?.titleHindi || productData?.title || 'हाथ से बुनी साड़ी';
+      (productData?.titleKey ? t(productData.titleKey) : null) ||
+      productData?.titleEnglish ||
+      productData?.titleHindi ||
+      productData?.title ||
+      t('lr.fallbackTitle');
     const shareText =
       currentLanguage === 'en'
         ? `🧵 Check out my handcrafted product on ShilpKala!\n\n${titleText}\nPrice: ${priceText}\n\n🛒 Direct from artisan — zero commission.\n\n#ShilpKala #Handmade #MakeInIndia`
-        : `🧵 शिल्पकला पर मेरा हस्तशिल्प उत्पाद देखें!\n\n${titleText}\nमूल्य: ${priceText}\n\n🛒 सीधे कारीगर से — शून्य कमीशन।\n\n#शिल्पकला #हस्तशिल्प #मेकइनइंडिया`;
+        : `🧵 ${t('ps.shareLead')}
+
+${titleText}
+${t('ps.sharePrice')}: ${priceText}
+
+🛒 ${t('ps.shareCta')}
+
+#ShilpKala #Handmade #MakeInIndia`;
 
     try {
       await Share.share({
@@ -177,9 +186,10 @@ export default function PublishSuccess({ route, navigation }) {
           <View style={styles.previewInfo}>
             <Text style={styles.previewTitle} numberOfLines={2}>
               {t(productData?.titleKey) ||
-                (currentLanguage === 'en'
-                  ? productData?.titleEnglish || productData?.title || 'Handwoven Saree'
-                  : productData?.titleHindi || productData?.title || 'हाथ से बुनी साड़ी')}
+                productData?.titleEnglish ||
+                productData?.titleHindi ||
+                productData?.title ||
+                t('lr.fallbackTitle')}
             </Text>
             <Text style={styles.previewPrice}>
               ₹{(productData?.price || 6400).toLocaleString('en-IN')}

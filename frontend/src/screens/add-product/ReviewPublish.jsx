@@ -27,15 +27,15 @@ export default function ReviewPublish({ route, navigation }) {
   const [editingField, setEditingField] = useState(null); // 'title' | 'description' | 'price' | null
   const [title, setTitle] = useState(
     (productData?.titleKey ? t(productData.titleKey) : null) ||
-    (currentLanguage === 'en'
-      ? productData?.titleEnglish || 'Handwoven Banarasi Silk Saree'
-      : productData?.titleHindi || 'हाथ से बुनी बनारसी रेशम साड़ी')
+    productData?.titleEnglish ||
+    productData?.titleHindi ||
+    t('lr.fallbackTitle')
   );
   const [description, setDescription] = useState(
     (productData?.descriptionKey ? t(productData.descriptionKey) : null) ||
-    (currentLanguage === 'en'
-      ? productData?.descriptionEnglish || 'Pure katan silk saree with gold zari motifs.'
-      : productData?.descriptionHindi || 'शुद्ध कातून रेशम साड़ी, सोने की ज़री बूटे।')
+    productData?.descriptionEnglish ||
+    productData?.descriptionHindi ||
+    t('lr.fallbackDescEn')
   );
   const [price, setPrice] = useState(String(productData?.price || 6400));
 

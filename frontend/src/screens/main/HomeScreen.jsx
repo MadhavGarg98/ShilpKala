@@ -20,20 +20,7 @@ import { useAppStore } from '../../store/useAppStore';
 import { useTranslation } from '../../i18n';
 import { resolveImageSource } from '../../utils/imageUtils';
 
-const ARTISAN_TIPS = [
-  {
-    hindi: 'अच्छी प्राकृतिक रोशनी में ली गई तस्वीरें ३ गुना अधिक खरीदारों को आकर्षित करती हैं।',
-    english: 'Photos taken in good natural daylight attract 3x more buyer inquiries.',
-  },
-  {
-    hindi: 'हथकरघा बुनाई की छोटी वीडियो खरीदारों में भरोसा और प्रामाणिकता बढ़ाती है।',
-    english: 'Short craft process clips build strong trust and authenticity with buyers.',
-  },
-  {
-    hindi: 'अपने उत्पाद के साथ जीआई (GI) प्रमाणन अवश्य जोड़ें — इससे अधिक मूल्य मिलता है।',
-    english: 'Always highlight your GI certification badge to command premium pricing.',
-  },
-];
+const ARTISAN_TIP_KEYS = ['home.tip1', 'home.tip2', 'home.tip3'];
 
 export default function HomeScreen({ navigation }) {
   const artisanProfile = useAppStore((state) => state.artisanProfile);
@@ -42,7 +29,7 @@ export default function HomeScreen({ navigation }) {
   const [refreshing, setRefreshing] = useState(false);
   const [activeFilter, setActiveFilter] = useState('all'); // 'all', 'live', 'draft'
   const [tipIndex, setTipIndex] = useState(0);
-  const { t, currentLanguage } = useTranslation();
+  const { t, getSecondary, currentLanguage } = useTranslation();
 
   const fetchProductList = async () => {
     try {
@@ -66,7 +53,7 @@ export default function HomeScreen({ navigation }) {
   };
 
   const handleNextTip = () => {
-    setTipIndex((prev) => (prev + 1) % ARTISAN_TIPS.length);
+    setTipIndex((prev) => (prev + 1) % ARTISAN_TIP_KEYS.length);
   };
 
   const handleAddProductPress = () => {
@@ -99,7 +86,7 @@ export default function HomeScreen({ navigation }) {
     return products;
   }, [products, activeFilter]);
 
-  const currentTip = ARTISAN_TIPS[tipIndex];
+  const currentTipKey = ARTISAN_TIP_KEYS[tipIndex];
 
   // Render Header & Widgets inside FlatList ListHeaderComponent
   const renderHeader = () => (
@@ -108,7 +95,8 @@ export default function HomeScreen({ navigation }) {
       <View style={styles.greetingRow}>
         <View>
           <Text style={styles.greetingPrimary}>
-            {t('welcomeArtisan')}, {artisanProfile?.name?.split(' ')[0] || 'कारीगर'} जी 🙏
+            {t('welcomeArtisan')}, {artisanProfile?.name?.split(' ')[0] || t('home.artisanFallback')}
+            {t('home.jiSuffix')} 🙏
           </Text>
           <Text style={styles.greetingSecondary}>
             {t('storefrontSubtitle')}
@@ -116,7 +104,7 @@ export default function HomeScreen({ navigation }) {
         </View>
         <View style={styles.locationChip}>
           <Ionicons name="location" size={12} color={colors.primary.rust} />
-          <Text style={styles.locationChipText}>वाराणसी</Text>
+          <Text style={styles.locationChipText}>{artisanProfile?.workshopLocation || t('home.location')}</Text>
         </View>
       </View>
 
@@ -131,9 +119,9 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.addBadgeText}>{t('quickList')}</Text>
           </View>
           <Text style={styles.addCardTitlePrimary}>{t('addProduct')}</Text>
-          {currentLanguage !== 'en' && (
-            <Text style={styles.addCardTitleSecondary}>Add New Craft Product</Text>
-          )}
+          {getSecondary('home.addProductSecondary') ? (
+            <Text style={styles.addCardTitleSecondary}>{getSecondary('home.addProductSecondary')}</Text>
+          ) : null}
           <Text style={styles.addCardSubtitle}>
             {t('addCardSubtitle')}
           </Text>
@@ -155,21 +143,27 @@ export default function HomeScreen({ navigation }) {
           <View style={[styles.statDot, { backgroundColor: colors.status.green }]} />
           <Text style={styles.statValue}>{liveCount}</Text>
           <Text style={styles.statLabelPrimary}>{t('statLive')}</Text>
-          {currentLanguage !== 'en' && <Text style={styles.statLabelSecondary}>Live</Text>}
+          {getSecondary('home.statLiveSecondary') ? (
+            <Text style={styles.statLabelSecondary}>{getSecondary('home.statLiveSecondary')}</Text>
+          ) : null}
         </View>
 
         <View style={styles.statChip}>
           <View style={[styles.statDot, { backgroundColor: colors.status.amber }]} />
           <Text style={styles.statValue}>{totalInquiries}</Text>
           <Text style={styles.statLabelPrimary}>{t('statInquiries')}</Text>
-          {currentLanguage !== 'en' && <Text style={styles.statLabelSecondary}>Inquiries</Text>}
+          {getSecondary('home.statInquiriesSecondary') ? (
+            <Text style={styles.statLabelSecondary}>{getSecondary('home.statInquiriesSecondary')}</Text>
+          ) : null}
         </View>
 
         <View style={styles.statChip}>
           <View style={[styles.statDot, { backgroundColor: colors.accent.blue }]} />
           <Text style={styles.statValue}>{totalViews > 0 ? totalViews : 148}</Text>
           <Text style={styles.statLabelPrimary}>{t('statViews')}</Text>
-          {currentLanguage !== 'en' && <Text style={styles.statLabelSecondary}>Views</Text>}
+          {getSecondary('home.statViewsSecondary') ? (
+            <Text style={styles.statLabelSecondary}>{getSecondary('home.statViewsSecondary')}</Text>
+          ) : null}
         </View>
       </View>
 
@@ -183,17 +177,15 @@ export default function HomeScreen({ navigation }) {
           <View style={styles.tipTitleGroup}>
             <Ionicons name="bulb" size={18} color={colors.status.gold} />
             <Text style={styles.tipTitle}>
-              {t('artisanTipTitle')} ({tipIndex + 1}/{ARTISAN_TIPS.length})
+              {t('artisanTipTitle')} ({tipIndex + 1}/{ARTISAN_TIP_KEYS.length})
             </Text>
           </View>
           <Text style={styles.tipTapNotice}>{t('tipTapNotice')}</Text>
         </View>
-        <Text style={styles.tipPrimary}>
-          {currentLanguage === 'en' ? currentTip.english : currentTip.hindi}
-        </Text>
-        {currentLanguage !== 'en' && (
-          <Text style={styles.tipSecondary}>{currentTip.english}</Text>
-        )}
+        <Text style={styles.tipPrimary}>{t(currentTipKey)}</Text>
+        {getSecondary(currentTipKey) ? (
+          <Text style={styles.tipSecondary}>{getSecondary(currentTipKey)}</Text>
+        ) : null}
       </TouchableOpacity>
 
       {/* 5. Filter Tabs (All / Live / Draft) */}
@@ -330,11 +322,6 @@ export default function HomeScreen({ navigation }) {
   const renderEmptyState = () => (
     <IllustratedEmptyState
       type="products"
-      titleHindi="अपनी पहली हस्तशिल्प कला जोड़ें"
-      titleEnglish="Add your first craft product to get started"
-      descHindi="शिल्पकला पर अपनी कला प्रदर्शित करें और देश-विदेश के खरीदारों से सीधे जुड़ें।"
-      descEnglish="Showcase your craft on ShilpKala and connect directly with verified buyers worldwide."
-      buttonTitle={t('addProduct')}
       onButtonPress={handleAddProductPress}
     />
   );

@@ -12,13 +12,20 @@ class ProductCreate(BaseModel):
     id: Optional[str] = None
     artisan_id: Optional[str] = None
     craft_type_id: Optional[str] = None
+    # Language the listing was originally dictated in (e.g. 'hi-IN').
+    source_language: Optional[str] = None
     title_hindi: Optional[str] = None
     title_english: Optional[str] = None
     title_key: Optional[str] = None
     description_hindi: Optional[str] = None
     description_english: Optional[str] = None
     description_key: Optional[str] = None
+    # price = artisan's final chosen price; the two suggested_* fields are the
+    # persisted AI band from /api/pricing/suggest (Phase 1 audit gap).
     price: float = 0.0
+    suggested_price_min: Optional[float] = None
+    suggested_price_max: Optional[float] = None
+    material_cost: Optional[float] = None
     status: str = "live"
     is_gi_certified: bool = False
     gi_reg_number: Optional[str] = None
@@ -35,7 +42,11 @@ class ProductCreate(BaseModel):
 class ProductUpdate(BaseModel):
     title_hindi: Optional[str] = None
     title_english: Optional[str] = None
+    source_language: Optional[str] = None
     price: Optional[float] = None
+    suggested_price_min: Optional[float] = None
+    suggested_price_max: Optional[float] = None
+    material_cost: Optional[float] = None
     status: Optional[str] = None
     is_gi_certified: Optional[bool] = None
     description_hindi: Optional[str] = None
@@ -54,7 +65,11 @@ class ProductResponse(BaseModel):
     description_hindi: Optional[str]
     description_english: Optional[str]
     description_key: Optional[str]
+    source_language: Optional[str]
     price: float
+    suggested_price_min: Optional[float]
+    suggested_price_max: Optional[float]
+    material_cost: Optional[float]
     status: str
     is_gi_certified: bool
     gi_reg_number: Optional[str]
@@ -110,7 +125,11 @@ def create_product(data: ProductCreate, db: Session = Depends(get_db)):
         description_hindi=data.description_hindi,
         description_english=data.description_english,
         description_key=data.description_key,
+        source_language=data.source_language,
         price=data.price,
+        suggested_price_min=data.suggested_price_min,
+        suggested_price_max=data.suggested_price_max,
+        material_cost=data.material_cost,
         status=data.status,
         is_gi_certified=data.is_gi_certified,
         gi_reg_number=data.gi_reg_number,
