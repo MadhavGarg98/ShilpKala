@@ -13,8 +13,7 @@ class VisionDescriptorService:
     """
     Vision-Language Product Description Service for ShilpKala.
     1. Generates base visual caption using Salesforce BLIP via HuggingFace transformers.
-    2. Enriches the caption via ShilpKala's multi-tier LLM listing generator (Groq / Anthropic).
-    3. Produces marketplace product title, full description, artisan heritage story, and tags.
+    2. Enriches the caption via ShilpKala's multi-tier LLM listing generator (Groq).
     """
 
     def __init__(self):
@@ -27,12 +26,14 @@ class VisionDescriptorService:
             try:
                 from transformers import BlipProcessor, BlipForConditionalGeneration
                 model_name = "Salesforce/blip-image-captioning-base"
-                # Check for locally cached weights first to prevent blocking HTTP requests on 1GB download
-                self._blip_processor = BlipProcessor.from_pretrained(model_name, local_files_only=True)
-                self._blip_model = BlipForConditionalGeneration.from_pretrained(model_name, local_files_only=True)
-                logger.info("BLIP image captioning model loaded from local cache.")
+                
+                # FIX 1: Set local_files_only=False to actually download the vision AI weights
+                self._blip_processor = BlipProcessor.from_pretrained(model_name, local_files_only=False)
+                self._blip_model = BlipForConditionalGeneration.from_pretrained(model_name, local_files_only=False)
+                
+                logger.info("BLIP image captioning model loaded successfully.")
             except Exception as e:
-                logger.info(f"BLIP model not cached locally ({e}); utilizing craft-aware vision descriptor.")
+                logger.info(f"BLIP model failed to load ({e}); utilizing dynamic YOLO fallback.")
                 self._is_blip_failed = True
         return self._blip_processor, self._blip_model
 
@@ -50,21 +51,21 @@ class VisionDescriptorService:
             except Exception as blip_err:
                 logger.warning(f"BLIP inference warning: {blip_err}")
 
-        # Intelligent craft-aware vision fallback
-        # Analyze image with YOLO and color palette
-        buf = io.BytesIO()
-        pil_image.save(buf, format="JPEG")
-        det = object_detector.detect_objects(buf.getvalue(), conf_threshold=0.20)
-        labels = [obj["label"].lower() for obj in det.get("objects", [])]
+        # FIX 2: Dynamic YOLO fallback. If BLIP fails, pass the ACTUAL detected object 
+        # (like 'mouse') to the LLM instead of a hardcoded heritage string!
+        try:
+            buf = io.BytesIO()
+            pil_image.save(buf, format="JPEG")
+            det = object_detector.detect_objects(buf.getvalue(), conf_threshold=0.20)
+            labels = [obj["label"].lower() for obj in det.get("objects", [])]
+            
+            if labels:
+                unique_labels = ", ".join(list(set(labels)))
+                return f"A photograph of a {unique_labels}."
+        except Exception as e:
+            logger.warning(f"YOLO detection fallback failed: {e}")
 
-        if any(l in ["bowl", "vase", "pot"] for l in labels):
-            return "Handcrafted Indian terracotta surahi clay pottery with traditional etched pattern"
-        elif any(l in ["bottle", "cup"] for l in labels):
-            return "Hand-hammered traditional brass diya vessel with polished metallic finish"
-        elif any(l in ["handbag", "bed", "couch"] for l in labels):
-            return "Handloom woven textile fabric craft with authentic artisanal zari borders"
-        else:
-            return "Handcrafted authentic Indian artisan heritage product made using traditional methods"
+        return "Handcrafted authentic Indian artisan heritage product made using traditional methods."
 
     def describe_image(
         self,
@@ -90,7 +91,7 @@ class VisionDescriptorService:
             transcript=base_caption,
             language_code=language_code,
             image_url=image_url,
-            craft_type=craft_type or "Handicraft & Artisan Goods"
+            craft_type=craft_type or "General Product"
         )
 
         elapsed_ms = int((time.perf_counter() - start_time) * 1000)

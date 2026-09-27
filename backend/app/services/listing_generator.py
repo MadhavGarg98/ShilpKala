@@ -22,10 +22,9 @@ LANG_NAMES: Dict[str, str] = {
 # ═══════════════════════════════════════════════════════════════════════════
 # MODEL SELECTION
 # ═══════════════════════════════════════════════════════════════════════════
-# Groq's 70B-class Llama model optimised for multilingual structured generation
-# with sub-second inference speeds via Groq's LPU inference engine.
-# Fallback model string if deprecated: "llama-3.1-70b-versatile".
-_GROQ_MODEL = "llama-3.3-70b-versatile"
+# Swapped to openai/gpt-oss-20b which is active and supports JSON mode
+# on the Groq Developer tier.
+_GROQ_MODEL = "openai/gpt-oss-20b"
 
 
 class ListingGeneratorService:
@@ -33,12 +32,10 @@ class ListingGeneratorService:
     AI Listing Generation — Groq-only edition.
 
     Provider chain (GROQ_API_KEY only — no Anthropic or OpenAI):
-      1. Groq (llama-3.3-70b-versatile) with response_format=json_object.
+      1. Groq (openai/gpt-oss-20b) with response_format=json_object.
          - Attempt 1: standard structured prompt.
          - Attempt 2 (retry): stricter "return ONLY valid JSON" prompt on parse failure.
       2. Deterministic craft-aware multilingual template fallback — never crashes.
-
-    All keys (ANTHROPIC_API_KEY, OPENAI_API_KEY) are intentionally not referenced.
     """
 
     def generate(
@@ -51,7 +48,7 @@ class ListingGeneratorService:
         short_lang = language_code.split("-")[0].lower()
         lang_name = LANG_NAMES.get(short_lang, "Hindi")
 
-        # ─── PRIMARY: Groq (llama-3.3-70b-versatile) ────────────────
+        # ─── PRIMARY: Groq (openai/gpt-oss-20b) ────────────────
         if settings.GROQ_API_KEY:
             try:
                 res = self._call_groq(transcript, short_lang, lang_name, craft_type)
@@ -171,12 +168,7 @@ Return a STRICT JSON object without any markdown formatting or surrounding text.
         craft_type: str,
     ) -> Optional[Dict[str, Any]]:
         """
-        Call Groq chat completions (llama-3.3-70b-versatile).
-
-        Retry policy:
-          - Attempt 1: standard structured prompt.
-          - Attempt 2: stricter "return ONLY valid JSON" prompt on JSON parse failure.
-          - Rate-limit (429) → return None immediately (no retry, let caller log).
+        Call Groq chat completions (openai/gpt-oss-20b).
         """
         from groq import Groq
         client = Groq(api_key=settings.GROQ_API_KEY)
@@ -239,8 +231,6 @@ Return a STRICT JSON object without any markdown formatting or surrounding text.
     ) -> Dict[str, Any]:
         """
         Deterministic, crash-proof multilingual fallback.
-        Adapts title, GI match, and keywords based on craft type and transcript keywords.
-        Always populates description_hi (standard Hindi) for the national marketplace.
         """
         demo_info = DEMO_VOICE_PHRASES.get(short_lang, DEMO_VOICE_PHRASES["hi"])
         combined = f"{transcript} {craft_type}".lower()
@@ -312,4 +302,3 @@ Return a STRICT JSON object without any markdown formatting or surrounding text.
 
 
 listing_generator = ListingGeneratorService()
-

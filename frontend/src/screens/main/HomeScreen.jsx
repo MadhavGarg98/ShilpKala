@@ -91,20 +91,21 @@ export default function HomeScreen({ navigation }) {
   // Render Header & Widgets inside FlatList ListHeaderComponent
   const renderHeader = () => (
     <View style={styles.headerContainer}>
-      {/* 1. Artisan Greeting */}
       <View style={styles.greetingRow}>
-        <View>
-          <Text style={styles.greetingPrimary}>
+        <View style={styles.greetingTextCol}>
+          <Text style={styles.greetingPrimary} numberOfLines={1}>
             {t('welcomeArtisan')}, {artisanProfile?.name?.split(' ')[0] || t('home.artisanFallback')}
             {t('home.jiSuffix')} 🙏
           </Text>
-          <Text style={styles.greetingSecondary}>
+          <Text style={styles.greetingSecondary} numberOfLines={1}>
             {t('storefrontSubtitle')}
           </Text>
         </View>
         <View style={styles.locationChip}>
           <Ionicons name="location" size={12} color={colors.primary.rust} />
-          <Text style={styles.locationChipText}>{artisanProfile?.workshopLocation || t('home.location')}</Text>
+          <Text style={styles.locationChipText} numberOfLines={1} ellipsizeMode="tail">
+            {artisanProfile?.location || t('home.location')}
+          </Text>
         </View>
       </View>
 
@@ -379,6 +380,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 16,
+    gap: 12,
+  },
+  greetingTextCol: {
+    flex: 1, 
   },
   greetingPrimary: {
     fontSize: 22,
@@ -399,11 +404,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 8,
+    maxWidth: '45%', 
   },
   locationChipText: {
     fontSize: 12,
     fontWeight: '700',
     color: colors.primary.rust,
+    flexShrink: 1, 
   },
   addProductCard: {
     flexDirection: 'row',
