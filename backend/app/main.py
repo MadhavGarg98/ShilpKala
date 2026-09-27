@@ -19,6 +19,7 @@ from app.routers import (
     listings_router,
     voice_router,
     pricing_router,
+    categories_router,
 )
 
 # Setup logging
@@ -128,6 +129,7 @@ app.include_router(artisans_router)
 app.include_router(listings_router)
 app.include_router(voice_router)
 app.include_router(pricing_router)
+app.include_router(categories_router)
 
 @app.get("/", tags=["Health"])
 def root():

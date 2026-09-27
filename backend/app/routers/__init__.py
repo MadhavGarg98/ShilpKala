@@ -4,6 +4,7 @@ from app.routers.artisans import router as artisans_router
 from app.routers.listings import router as listings_router
 from app.routers.voice import router as voice_router
 from app.routers.pricing import router as pricing_router
+from .categories import router as categories_router
 
 __all__ = [
     "images_router",
